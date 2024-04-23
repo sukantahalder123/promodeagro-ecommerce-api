@@ -1,0 +1,29 @@
+
+  signup:
+    handler: loginwithotp/signup.signUp
+    timeout: 300
+    events:
+      - http:
+          path: /signupwithmno
+          method: post
+  signin:
+    handler: loginwithotp/signin.signInWithOTP
+    timeout: 300
+    events:
+      - http:
+          path: /signinwithotp
+          method: post
+  otp:
+    handler: loginwithotp/otp.generateAndSendOTP
+    timeout: 300
+    events:
+      - http:
+          path: /generateotp
+          method: post
+  verify:
+    handler: loginwithotp/verify.verifyPhoneNumber
+    timeout: 300
+    events:
+      - http:
+          path: /verify
+          method: post

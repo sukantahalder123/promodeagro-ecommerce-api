@@ -1,0 +1,6 @@
+ webhook:
+   handler:  webhooks/webhook.handler
+   events:
+     - httpApi:
+         path: /webhook
+         method: ANY

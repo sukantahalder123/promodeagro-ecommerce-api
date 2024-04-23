@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.540.0",
+    "@aws-sdk/util-dynamodb": "^3.540.0",
+    "aws-sdk": "^2.1576.0",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.4",
+    "send": "^0.18.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "serverless-offline": "^13.3.4"
+  }
+}

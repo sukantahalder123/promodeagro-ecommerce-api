@@ -1,0 +1,38 @@
+          
+customeradd:
+    handler: Customer/createCustomer.insertCustomer
+    events:
+      - httpApi:
+          path: /customerinsert
+          method: post
+
+customerget:
+    handler: Customer/getAllCustomer.getAllCustomer
+    events:
+      - httpApi:
+          path: /getAllCustomer
+          method: get
+
+customergetbyid:
+    handler: Customer/getCustomerById.getCustomerById
+    events:
+      - httpApi:
+          path: /getCustomerById/{customerId}
+          method: get
+
+customerupdatebyid:
+    handler: Customer/updateCustomerId.updateCustomer
+    timeout: 300
+    events:
+      - httpApi:
+          path: /updateCustomer/{customerId}
+          method: put
+
+customerdeletebyid:
+    handler: Customer/deleteCustomerById.deleteCustomerById
+    events:
+      - httpApi:
+          path: /deleteCustomerById/{customerId}
+          method: delete
+
+                

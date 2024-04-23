@@ -1,0 +1,14 @@
+  # authorizer:
+  #   handler: authorizer.authorizer
+  handler:
+    handler: /Login/signUp.handler  # Corrected filename and path
+    events:
+      - http:
+          path: /signUp
+          method: post
+  signin:
+    handler: /Login/signIn.signIn
+    events:
+      - http:
+          path: /signIn
+          method: post

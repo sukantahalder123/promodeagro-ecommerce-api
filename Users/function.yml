@@ -1,0 +1,29 @@
+  getAllUsers:
+    handler: Users/getAllUsers.getAllUsers
+    events:
+      - http:
+          path: /getAllUsers
+          method: GET
+
+  getByUserName:
+    handler: Users/getByUserName.getByUserName
+    events:
+      - http:
+          path: /getByUserName
+          method: GET
+          
+  getUserByRole:
+    handler: Users/getUserByRole.getUserByRole  
+    events:
+      - http:
+          path: /get-users-by-role-in-group
+          method: get    
+
+  getAllUsersEmail:
+    handler: Users/getAllUsersEmail.getAllUsersEmail
+    events:
+      - http:
+           path: /getAllUsersEmail
+           method: get
+    
+

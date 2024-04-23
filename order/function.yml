@@ -1,0 +1,34 @@
+getAllOrders:
+    handler: order/getAllOrders.handler
+    events:
+      - httpApi:
+          path: /getAllOrders
+          method: get
+
+createOrder:
+    handler: order/createorder.handler
+    events:
+      - httpApi:
+          path: /createOrder
+          method: post   
+
+getOrderById:
+    handler: order/getOrderById.handler
+    events:
+      - httpApi:
+          path: /getOrderById/{id}
+          method: get                        
+
+updateOrder:
+    handler: order/updateOrder.handler
+    events:
+      - httpApi:
+          path: /updateOrder/{id}
+          method: put    
+
+deleteOrderById: 
+    handler: order/deleteOrderById.handler
+    events:
+      - httpApi:
+          path: /deleteOrderById/{id}
+          method: delete

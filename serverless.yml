@@ -1,0 +1,68 @@
+
+# service: appkube-ecommerce-api
+
+# frameworkVersion: "3"
+
+# provider:
+#   name: aws
+#   stage: dev
+#   region: us-east-1
+#   runtime: nodejs18.x
+#   role: arn:aws:iam::657907747545:role/appkube-ecommerce-api-service-role
+#   httpApi:
+#     cors:
+#       allowedOrigins:
+#         - "*"
+#       allowedHeaders:
+#         - Content-Type
+
+
+# functions:
+
+#  # - ${file(inventory/function.yml)}
+# #    The following are a few example events you can configure
+
+#  # - ${file(OrderBills/function.yml)}
+#   - ${file(Products/function.yml)}
+#   - ${file(RBAC/function.yml)}
+#   - ${file(loginwithotp/function.yml)}
+#  # - ${file(Users/function.yml)}
+#   #- ${file(Login/function.yml)}
+
+
+#   #- ${file(catalog/function.yml)}
+
+# plugins:
+#   - serverless-offline
+
+
+service: appkube-ecommerce-api
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  runtime: nodejs18.x
+  role: arn:aws:iam::657907747545:role/appkube-ecommerce-api-service-role
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+      allowedHeaders:
+        - Content-Type
+
+functions:
+  - ${file(products/function.yml)}
+
+  - ${file(RBAC/function.yml)}
+  - ${file(loginwithotp/function.yml)}
+
+  - ${file(OrderBills/function.yml)}
+  - ${file(Users/function.yml)}
+  - ${file(Login/function.yml)}
+  - ${file(Customer/function.yml)}
+  - ${file(webhooks/function.yml)}
+plugins:
+  - serverless-offline

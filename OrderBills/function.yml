@@ -1,0 +1,6 @@
+sendBill:
+    handler: OrderBills/shareBillsOnWhatsaap.handler
+    events:
+      - httpApi:
+          path: /sendBills
+          method: post

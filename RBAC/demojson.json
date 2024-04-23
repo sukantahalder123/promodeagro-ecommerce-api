@@ -1,0 +1,12 @@
+
+
+{
+    "group": "admin",
+    "permissions": [
+        {
+        "permission":["write","read"],
+        "endpoint":"/products"
+    }
+         
+    ]
+}

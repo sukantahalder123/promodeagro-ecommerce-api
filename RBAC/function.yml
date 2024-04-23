@@ -1,0 +1,149 @@
+# service: rbac
+
+# frameworkVersion: "3"
+
+# plugins:
+#   - serverless-offline
+
+# provider:
+#   name: aws
+#   runtime: nodejs14.x 
+
+# functions:
+#   authorizer:
+#    handler: authorizer.authorizer  
+#   # sigup:
+#   #  handler: signup.handler
+#   #  events:
+#   #   - http:
+#   #       path: /signup
+#   #       method: post
+
+#   # singin:
+#   #  handler: signin.handler
+#   #  events:
+#   #   - http:
+#   #       path: /signin
+#   #       method: post
+#   # superAdmin:
+#   #  handler: superAdmin.handler
+#   #  events:
+#   #    - http:
+#   #        path: /superAdmin
+#   #        method: post
+
+#   # getCustomer:
+#   #  handler: customerget.getAllCustomer
+#   #  events:
+#   #  - http: 
+#   #      path: /getAllCustomer
+#   #      method: GET
+#   #      authorizer: authorizer
+#   # getCustomerById:
+#   #   handler: customergetbyid.getCustomerById
+#   #   events:
+#   #     - http:
+#   #         path: /getCustomerById/{customer_Id}
+#   #         method: GET
+#   #         authorizer: authorizer
+#   # insertCustomer:
+#   #   handler: insertCustomer.insertCustomer
+#   #   events:
+#   #     - http:
+#   #          path: /insertCustomer
+#   #          method: post
+#   #          authorizer: authorizer
+#   SuperAdmin:
+#    handler: signup.handler
+#    events:
+#     - http:
+#         path: /signup
+#         method: post
+#   SuperAdminsignin:
+#    handler: signin.handler
+#    events:
+#      - http:
+#          path: /signin
+#          method: post
+#   groupDynamic:
+#    handler: groupsDynamic.fetchDynamicGroups
+#    events:
+#      - http:
+#          path: /groupsDynamic
+#          method: GET
+# getAllProducts:
+#   handler: getAllProducts.handler
+#   events:
+#     - http:
+#         path: /product  # Corrected path to differentiate from other endpoints
+#         method: get
+
+
+
+
+# service: rbac
+
+# frameworkVersion: "3"
+
+# plugins:
+#   - serverless-offline
+
+# provider:
+#   name: aws
+#   runtime: nodejs14.x 
+
+# functions:
+  authorizer:
+    handler: authorizer.authorizer 
+    
+  # dynamicPermission:
+  #   handler: dynamicPermission.fetchDynamicGroups 
+  #   events:
+  #     - http:
+  #         path: /authorizer1
+  #         method: post
+  # getpermission:
+  #   handler: getpermissiondet.getPermission
+  #   events:
+  #     - http:
+  #         path: /permissions
+  #         method: get
+
+  SuperAdmin:
+    handler: RBAC/signup.handler
+    events:
+      - http:
+          path: /signup
+          method: post
+
+  SuperAdminsignin:
+    handler: RBAC/signin.handler
+    timeout: 300
+    events:
+      - http:
+          path: /signin
+          method: post
+
+  groupDynamic:
+    handler: RBAC/groupsDynamic.fetchDynamicGroups
+    timeout: 300
+    events:
+      - http:
+          path: /groupsDynamic
+          method: post
+
+  getAllProducts:
+    handler: RBAC/getAllProducts.handler
+    events:
+      - http:
+          path: /getproducts
+          method: get
+          authorizer: authorizer
+  getById:
+    handler: products/getById.getProductById
+    timeout: 300
+    events:
+      - http:
+          path: /product/{id}
+          method: get
+          authorizer: authorizer

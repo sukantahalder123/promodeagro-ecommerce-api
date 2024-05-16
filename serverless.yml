@@ -36,7 +36,7 @@
 #   - serverless-offline
 
 
-service: appkube-ecommerce-api
+service: promodeAgro-ecommerce-api
 
 frameworkVersion: "3"
 

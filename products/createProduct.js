@@ -34,10 +34,10 @@ module.exports.handler = async (event) => {
             }
         }
 
-        const tableName = 'Product-hxojpgz675cmbad5uyoeynwh54-dev';
+        const tableName = 'Products';
 
         const s3params = {
-            Bucket: 'posdmsservice',
+            Bucket: 'ecomdmsservice',
             Key: productData.name + productData.category,
             Body: Buffer.from(productData.image, 'base64'),
             ContentType: 'image/png'

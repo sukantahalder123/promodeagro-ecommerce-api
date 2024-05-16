@@ -1,6 +1,6 @@
 
-# promodeagro-ecommerce-api
-promodeagro   ecommerce backend Lambda  API's
+# appkube-ecommerce-api
+Appkube ecommerce backend Lambda  API's
 
 
 ## Table of Contents
@@ -37,7 +37,7 @@ To get started with our APIs, you'll need to clone the repository and set up you
 To clone the repository, use the following command:
 
 ```bash
-git clone https://github.com/promodeagro  -ecommerce/promodeagro  -ecommerce-api.git 
+git clone https://github.com/Appkube-ecommerce/appkube-ecommerce-api.git 
 
 ```
 

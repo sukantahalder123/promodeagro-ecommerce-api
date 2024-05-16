@@ -7,7 +7,7 @@ const { sendButtons} = require('./merge');
 const AWS = require('aws-sdk');
 
 AWS.config.update({
-    region: 'us-east-1', // Specify your AWS region
+    region: '', // Specify your AWS region
     endpoint: 'http://localhost:8000' // Specify your DynamoDB endpoint URL (for DynamoDB Local)
 });
 

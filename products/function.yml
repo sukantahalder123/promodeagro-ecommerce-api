@@ -12,12 +12,15 @@ updateProduct:
         path: /product
         method: put
 
-getAllProducts:
+
+getAllProduct:
   handler: products/getAllProducts.handler
   events:
     - httpApi:
-        path: /product  # Corrected path to differentiate from other endpoints
-        method: get      # Corrected method to match the intended action
+        path: /product
+        method: get
+        
+           # Corrected method to match the intended action
 
 delete:
   handler: products/delete.deleteProduct
@@ -26,10 +29,10 @@ delete:
     - httpApi:
         path: /product
         method: delete
-getById:
-  handler: products/getById.getProductById
-  timeout: 300
-  events:
-    - httpApi:
-        path: /product/{id}
-        method: get
+# getById:
+#   handler: products/getById.getProductById
+#   timeout: 300
+#   events:
+#     - httpApi:
+#         path: /product/{id}
+#         method: get

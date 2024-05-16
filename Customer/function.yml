@@ -20,6 +20,13 @@ customergetbyid:
           path: /getCustomerById/{customerId}
           method: get
 
+customergetbyPhone:
+    handler: Customer/getCustomerByPhone.getCustomerByPhone
+    events:
+      - httpApi:
+          path: /getCustomerByPhone/{phoneNumber}
+          method: get
+
 customerupdatebyid:
     handler: Customer/updateCustomerId.updateCustomer
     timeout: 300

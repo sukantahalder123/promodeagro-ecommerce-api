@@ -10,7 +10,7 @@ const dynamoDB = new DynamoDBClient({
     endpoint: process.env.ENDPOINT
 });
 
-const tableName = process.env.ORDER_TABLE_NAME;
+const tableName = process.env.ORDER_TABLE;
 
 // Handler function to get an order by ID
 module.exports.handler = async (event) => {

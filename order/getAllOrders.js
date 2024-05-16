@@ -10,7 +10,7 @@ exports.handler = async () => {
     try {
         // Scan the DynamoDB table to retrieve all orders
         const scanParams = {
-            TableName: process.env.ORDER_TABLE_NAME // Access table name from environment variable
+            TableName: process.env.ORDER_TABLE // Access table name from environment variable
         };
         const data = await dynamoDB.send(new ScanCommand(scanParams));
 

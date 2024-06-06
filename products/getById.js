@@ -11,7 +11,7 @@ module.exports.getProductById = async (event) => {
   try {
     const productId = event.pathParameters.id;
     const params = {
-      TableName: 'Product-hxojpgz675cmbad5uyoeynwh54-dev', 
+      TableName: 'Products', 
       Key: {
         'id': productId 
       }

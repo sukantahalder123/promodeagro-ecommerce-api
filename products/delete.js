@@ -4,7 +4,6 @@ require('dotenv').config();
  
 const dynamoDB = new DynamoDBClient({
     region: 'us-east-1',
-    endpoint: 'http://localhost:8000'
 }); 
  
 const FACEBOOK_GRAPH_API_URL = process.env.FACEBOOK_GRAPH_API_URL;
@@ -31,7 +30,7 @@ module.exports.deleteProduct = async (event) => {
        
 
       const getProductParams = {
-        TableName: 'Product-hxojpgz675cmbad5uyoeynwh54-dev',
+        TableName: 'Product',
         Key: {
             id: { S: productData.id }
         }
@@ -62,7 +61,7 @@ module.exports.deleteProduct = async (event) => {
         console.log("###",response)
   
         const params = {
-            TableName: 'Product-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Product',
             Key: {
                 id: { S: productData.id } // Assuming productId is a string
             }

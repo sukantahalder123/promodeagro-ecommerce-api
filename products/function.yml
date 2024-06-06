@@ -29,10 +29,10 @@ delete:
     - httpApi:
         path: /product
         method: delete
-# getById:
-#   handler: products/getById.getProductById
-#   timeout: 300
-#   events:
-#     - httpApi:
-#         path: /product/{id}
-#         method: get
+getById:
+  handler: products/getById.getProductById
+  timeout: 300
+  events:
+    - httpApi:
+        path: /product/{id}
+        method: get

@@ -1,0 +1,2 @@
+orderProcesStepFunctionCall: 
+    handler: stepFunctions/orderProcess.handler

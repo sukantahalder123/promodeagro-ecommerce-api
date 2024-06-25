@@ -84,7 +84,7 @@ module.exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Order created successfully', orderId: orderId }),
+      body: { message: 'Order created successfully', orderId: orderId },
     };
   } catch (error) {
     console.error('Error:', error.message);

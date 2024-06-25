@@ -13,6 +13,9 @@ updateInventoryItem:
     - httpApi:
         path: /updateInventory/{id}
         method: PUT
+updateInventoryItemByOrder:
+  handler: inventory/updateInventryFromOrder.updateInventoryItems
+ 
 
 getAllInventory:
   handler: inventory/getAllInventory.getAllInventory

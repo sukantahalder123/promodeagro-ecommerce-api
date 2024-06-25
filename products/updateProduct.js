@@ -20,9 +20,7 @@ module.exports.handler = async (event) => {
 
     const productData = JSON.parse(event.body);
 
-    const updateFbData = {
-
-    }
+    const updateFbData = {};
 
     // Check if ID is provided
     if (!productData.id) {
@@ -32,20 +30,22 @@ module.exports.handler = async (event) => {
       };
     }
 
-    const tableName = 'Product-hxojpgz675cmbad5uyoeynwh54-dev';
+    const tableName = 'Products';
 
     // Prepare update expression and attribute values for DynamoDB update
     let updateExpression = 'SET ';
     const expressionAttributeValues = {};
     const expressionAttributeNames = {};
 
-
     // Update the price field if provided
     if (productData.price) {
+      // Convert price to an integer (e.g., cents for USD)
+      const priceInCents = Math.round(productData.price * 100);
+
       updateExpression += '#price = :price, ';
       expressionAttributeNames['#price'] = 'price';
-      expressionAttributeValues[':price'] = productData.price;
-      updateFbData.price = productData.price
+      expressionAttributeValues[':price'] = priceInCents;
+      updateFbData.price = priceInCents;
     }
 
     // Update other fields if provided
@@ -56,20 +56,20 @@ module.exports.handler = async (event) => {
       updateFbData.name = productData.name;
     }
 
-    if (productData.image) {
+    if (productData.image && productData.imageType) {
       // Upload image to S3
       const s3params = {
-        Bucket: 'posdmsservice',
-        Key: productData.name + productData.category, // Adjust this as per your requirement
+        Bucket: 'ecomdmsservice',
+        Key: `${productData.name}-${productData.id}`, // Adjust this as per your requirement
         Body: Buffer.from(productData.image, 'base64'),
-        ContentType: 'image/png'
+        ContentType: productData.imageType
       };
       const uploadResult = await s3.upload(s3params).promise();
       const publicUrl = uploadResult.Location;
 
       updateExpression += '#image = :image, ';
       expressionAttributeNames['#image'] = 'image';
-      expressionAttributeValues[':image'] = productData.image;
+      expressionAttributeValues[':image'] = publicUrl; // Store the S3 URL in DynamoDB
       updateFbData.image_url = publicUrl;
     }
 
@@ -79,11 +79,13 @@ module.exports.handler = async (event) => {
       expressionAttributeValues[':description'] = productData.description;
       updateFbData.description = productData.description;
     }
+
     if (productData.unit) {
       updateExpression += '#unit = :unit, ';
       expressionAttributeNames['#unit'] = 'unit';
       expressionAttributeValues[':unit'] = productData.unit.toUpperCase();
     }
+
     if (productData.category) {
       updateExpression += '#category = :category, ';
       expressionAttributeNames['#category'] = 'category';
@@ -106,8 +108,6 @@ module.exports.handler = async (event) => {
       ExpressionAttributeValues: expressionAttributeValues,
     };
 
-
-    console.log("dataaaa", updateFbData)
     const product = {
       access_token: ACCESS_TOKEN,
       requests: [
@@ -123,8 +123,6 @@ module.exports.handler = async (event) => {
 
     // Make a request to Facebook Graph API
     await axios.post(`${FACEBOOK_GRAPH_API_URL}/${CATALOG_ID}/batch`, product);
-
-
 
     const updatedProduct = await dynamoDB.update(updateParams).promise();
 

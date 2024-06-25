@@ -32,3 +32,9 @@ deleteOrderById:
       - httpApi:
           path: /deleteOrderById/{id}
           method: delete
+
+validateOrder: 
+    handler: order/validateOrder.handler
+
+confirmedOrder: 
+    handler: order/confirmOrder.handler

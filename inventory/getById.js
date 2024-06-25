@@ -13,7 +13,7 @@ module.exports.getInventoryById = async (event) => {
 
         // Define the GetItemCommand to get the item by ID
         const command = new GetItemCommand({
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Inventory',
             Key: { id: { S: inId } }
         });
 

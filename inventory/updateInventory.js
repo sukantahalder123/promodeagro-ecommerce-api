@@ -20,7 +20,7 @@ module.exports.updateInventoryItem = async (event) => {
 
         // Check if the inventory item exists
         const getItemParams = {
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Inventory',
             Key: {
                 id: { S: id }
             }
@@ -34,7 +34,7 @@ module.exports.updateInventoryItem = async (event) => {
 
         // Update the quantity and unit of the existing item
         const updateParams = {
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Inventory',
             Key: {
                 id: { S: id }
             },

@@ -36,3 +36,11 @@ getById:
     - httpApi:
         path: /product/{id}
         method: get
+
+
+searchApi:
+    handler: products/searchApi.handler
+    events:
+      - httpApi:
+          path: /products
+          method: get

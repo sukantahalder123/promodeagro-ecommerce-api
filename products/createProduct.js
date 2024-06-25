@@ -22,7 +22,7 @@ module.exports.handler = async (event) => {
             };
         }
 
-        const requiredFields = ['name', 'price', 'image', 'description', 'unit', 'category', 'availability', 'brand', 'currency'];
+        const requiredFields = ['name', 'price', 'image', 'imageType', 'description', 'unit', 'category', 'availability', 'brand', 'currency'];
         const productData = JSON.parse(event.body);
 
         for (const field of requiredFields) {
@@ -38,9 +38,9 @@ module.exports.handler = async (event) => {
 
         const s3params = {
             Bucket: 'ecomdmsservice',
-            Key: productData.name + productData.category,
+            Key: `${productData.name}-${generateUniqueId()}`,
             Body: Buffer.from(productData.image, 'base64'),
-            ContentType: 'image/png'
+            ContentType: productData.imageType
         };
 
         const uploadResult = await s3.upload(s3params).promise();
@@ -63,6 +63,9 @@ module.exports.handler = async (event) => {
         };
 
         try {
+            // Convert price to an integer (e.g., cents for USD)
+            const priceInCents = Math.round(productData.price * 100);
+
             const response = await axios.post(`${FACEBOOK_GRAPH_API_URL}/${CATALOG_ID}/products?access_token=${ACCESS_TOKEN}`, {
                 retailer_id: newProduct.id,
                 availability: productData.availability,
@@ -71,22 +74,19 @@ module.exports.handler = async (event) => {
                 description: newProduct.description,
                 image_url: newProduct.image,
                 name: newProduct.name,
-                price: newProduct.price,
+                price: priceInCents,
                 currency: productData.currency,
                 url: newProduct.image
             });
-
-
 
             const putParams = {
                 TableName: tableName,
                 Item: newProduct,
             };
-            if (response.status === 200) {
 
+            if (response.status === 200) {
                 await dynamoDB.put(putParams).promise();
             }
-
 
             return {
                 statusCode: 200,

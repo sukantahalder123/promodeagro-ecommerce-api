@@ -10,7 +10,7 @@ module.exports.getAllInventory = async () => {
     try {
         // Define the ScanCommand to scan the entire table
         const command = new ScanCommand({
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev'
+            TableName: 'Inventory'
         });
 
 

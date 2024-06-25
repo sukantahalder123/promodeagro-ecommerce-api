@@ -21,7 +21,7 @@ module.exports.handler = async (event) => {
 
         // Check if productId exists in the product table
         const getProductParams = {
-            TableName: 'Product-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Products',
             Key: { id: { S: productId } }
         };
 
@@ -37,7 +37,7 @@ module.exports.handler = async (event) => {
 
         // Check if productId already exists in the inventory table
         const getInventoryParams = {
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Inventory',
             FilterExpression: 'productId = :productId',
             ExpressionAttributeValues: { ':productId': { S: productId } }
         };
@@ -50,7 +50,7 @@ module.exports.handler = async (event) => {
 
             // Save inventory item to DynamoDB
             const putParams = {
-                TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+                TableName: 'Inventory',
                 Item: marshall({
                     id: id,
                     productId: productId,

@@ -12,7 +12,7 @@ module.exports.deleteInventoryById = async (event) => {
 
         // Define the params for the DeleteItem operation
         const params = {
-            TableName: 'Inventory-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: 'Inventory',
             Key: {
                 'id': { S: id }
             }

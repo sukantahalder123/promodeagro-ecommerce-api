@@ -1,0 +1,313 @@
+openapi: 3.0.1
+info:
+  title: Products API
+  description: API for managing and filtering products
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Local server
+tags:
+  - name: Products
+    description: Endpoints related to products
+paths:
+  /product:
+    get:
+      tags:
+        - Products
+      summary: Get all products with filters
+      description: Retrieve a list of all products with optional filters
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Filter by product name
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Filter by product category
+        - in: query
+          name: availability
+          schema:
+            type: string
+            enum: [in stock, out of stock]
+          description: Filter by availability
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            format: float
+          description: Minimum price to filter by
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            format: float
+          description: Maximum price to filter by
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get a product by ID
+      description: Retrieve a single product by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the product to retrieve
+      responses:
+        '200':
+          description: A product object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Get all orders
+      description: Retrieve a list of all orders
+      responses:
+        '200':
+          description: A list of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      tags:
+        - Orders
+      summary: Create a new order
+      description: Add a new order to the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '201':
+          description: Order created successfully
+  /orders/{id}:
+    get:
+      tags:
+        - Orders
+      summary: Get an order by ID
+      description: Retrieve a single order by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order to retrieve
+      responses:
+        '200':
+          description: An order object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+    put:
+      tags:
+        - Orders
+      summary: Update an order
+      description: Update the details of an existing order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '200':
+          description: Order updated successfully
+    delete:
+      tags:
+        - Orders
+      summary: Delete an order
+      description: Delete an order from the database
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order to delete
+      responses:
+        '204':
+          description: Order deleted successfully
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        _lastChangedAt:
+          type: integer
+          format: int64
+          description: Timestamp of the last change
+        unit:
+          type: string
+          description: Unit of the product
+        _deleted:
+          type: boolean
+          description: Deletion status of the product
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp of the product
+        name:
+          type: string
+          description: Name of the product
+        availability:
+          type: string
+          description: Availability status of the product
+        _version:
+          type: integer
+          description: Version of the product record
+        ratings:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: Number of ratings
+            average:
+              type: number
+              format: float
+              description: Average rating
+            reviews:
+              type: array
+              items:
+                type: object
+                properties:
+                  rating:
+                    type: integer
+                    description: Rating value
+                  date:
+                    type: string
+                    format: date-time
+                    description: Date of the review
+                  comment:
+                    type: string
+                    description: Comment of the review
+                  userId:
+                    type: string
+                    description: User ID of the reviewer
+        image:
+          type: string
+          description: URL of the product image
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp of the product
+        category:
+          type: string
+          description: Category of the product
+        description:
+          type: string
+          description: Description of the product
+        price:
+          type: number
+          format: float
+          description: Price of the product
+        originalPrice:
+          type: number
+          format: float
+          description: Original price of the product
+        discount:
+          type: string
+          description: Discount on the product
+        id:
+          type: string
+          description: Unique identifier for the product
+      required:
+        - id
+        - name
+        - category
+        - price
+        - availability
+    OrderInput:
+      type: object
+      properties:
+        totalPrice:
+          type: string
+          description: Total price of the order
+        paymentDetails:
+          type: object
+          properties:
+            expiryDate:
+              type: object
+              properties:
+                S:
+                  type: string
+                  description: Expiry date of the payment card
+            cardNumber:
+              type: object
+              properties:
+                S:
+                  type: string
+                  description: Payment card number
+            cvv:
+              type: object
+              properties:
+                S:
+                  type: string
+                  description: CVV of the payment card
+        status:
+          type: string
+          description: Status of the order
+        paymentMethod:
+          type: string
+          description: Payment method used for the order
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+                description: ID of the product in the order
+              quantity:
+                type: string
+                description: Quantity of the product in the order
+        customerId:
+          type: string
+          description: ID of the customer placing the order
+        address:
+          type: string
+          description: Address for delivery
+      required:
+        - totalPrice
+        - paymentDetails
+        - status
+        - paymentMethod
+        - items
+        - customerId
+        - address
+    Order:
+      type: object
+      properties:
+        __typename:

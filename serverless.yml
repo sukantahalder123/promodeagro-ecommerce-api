@@ -60,7 +60,7 @@ functions:
   # - ${file(loginwithotp/function.yml)}
 
   - ${file(OrderBills/function.yml)}
-  - ${file(Users/function.yml)}
+  # - ${file(Users/function.yml)}
   - ${file(inventory/function.yml)}
   # - ${file(Login/function.yml)}
   - ${file(Customer/function.yml)}

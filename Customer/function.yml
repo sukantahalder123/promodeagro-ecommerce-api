@@ -3,21 +3,21 @@ customeradd:
     handler: Customer/createCustomer.insertCustomer
     events:
       - httpApi:
-          path: /customerinsert
+          path: /customer
           method: post
 
 customerget:
     handler: Customer/getAllCustomer.getAllCustomer
     events:
       - httpApi:
-          path: /getAllCustomer
+          path: /customer
           method: get
 
 customergetbyid:
     handler: Customer/getCustomerById.getCustomerById
     events:
       - httpApi:
-          path: /getCustomerById/{customerId}
+          path: /customer/{customerId}
           method: get
 
 customergetbyPhone:

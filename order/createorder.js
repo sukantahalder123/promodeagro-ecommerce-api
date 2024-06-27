@@ -22,7 +22,7 @@ function generateRandomOrderId() {
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, paymentMethod, status, customerId, totalPrice, paymentDetails } = body; // Include paymentDetails here
+    const { items, paymentMethod, status, customerId,address, totalPrice, paymentDetails } = body; // Include paymentDetails here
 
     // Validate input
     if (!Array.isArray(items) || items.length === 0 || !customerId || !totalPrice || !paymentDetails) { // Check for paymentDetails
@@ -67,6 +67,7 @@ module.exports.handler = async (event) => {
       status: status.toUpperCase() || "PENDING",
       totalPrice: totalPrice.toString(),
       customerId: customerId,
+      address: address,
       paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
       updatedAt: new Date().toISOString(),
       _lastChangedAt: Date.now().toString(),
@@ -84,8 +85,9 @@ module.exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: { message: 'Order created successfully', orderId: orderId },
+      body: JSON.stringify({ message: 'Order created successfully', orderId: orderId }),
     };
+    
   } catch (error) {
     console.error('Error:', error.message);
     return {

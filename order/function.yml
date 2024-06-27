@@ -2,14 +2,14 @@ getAllOrders:
     handler: order/getAllOrders.handler
     events:
       - httpApi:
-          path: /getAllOrders
+          path: /order
           method: get
 
 createOrder:
     handler: order/createorder.handler
     events:
       - httpApi:
-          path: /createOrder
+          path: /order
           method: post   
 
 getOrderById:

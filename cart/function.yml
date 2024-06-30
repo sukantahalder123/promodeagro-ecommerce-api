@@ -1,0 +1,29 @@
+addItemsInCart:
+    handler: cart/addItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/addItem
+          method: post
+
+updateItemsInCart:
+    handler: cart/updateItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/updateItem
+          method: put
+
+getItemsInCart:
+    handler: cart/getItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/getItems/{userId}
+          method: get
+
+
+deleteItemsInCart:
+    handler: cart/deleteItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/deleteItem
+          method: delete
+

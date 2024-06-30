@@ -1,29 +1,43 @@
   getAllUsers:
     handler: Users/getAllUsers.getAllUsers
     events:
-      - http:
+      - httpApi:
           path: /getAllUsers
           method: GET
 
   getByUserName:
     handler: Users/getByUserName.getByUserName
     events:
-      - http:
+      - httpApi:
           path: /getByUserName
           method: GET
           
   getUserByRole:
     handler: Users/getUserByRole.getUserByRole  
     events:
-      - http:
+      - httpApi:
           path: /get-users-by-role-in-group
           method: get    
 
   getAllUsersEmail:
     handler: Users/getAllUsersEmail.getAllUsersEmail
     events:
-      - http:
+      - httpApi:
            path: /getAllUsersEmail
            method: get
     
-
+  userRegistration:
+    handler: Users/userRegistration.handler
+    events:
+      - httpApi:
+           path: /register
+           method: post
+  
+  userLogin:
+    handler: Users/userLogin.handler
+    events:
+      - httpApi:
+           path: /login
+           method: post
+    
+    

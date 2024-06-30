@@ -60,13 +60,14 @@ functions:
   # - ${file(loginwithotp/function.yml)}
 
   - ${file(OrderBills/function.yml)}
-  # - ${file(Users/function.yml)}
+  - ${file(Users/function.yml)}
   - ${file(inventory/function.yml)}
   # - ${file(Login/function.yml)}
   - ${file(Customer/function.yml)}
   - ${file(order/function.yml)}
   - ${file(payment/function.yml)}
   - ${file(stepFunctions/function.yml)}
+  - ${file(cart/function.yml)}
 
   # - ${file(webhooks/function.yml)}
 plugins:

@@ -1,43 +1,78 @@
-  getAllUsers:
-    handler: Users/getAllUsers.getAllUsers
-    events:
-      - httpApi:
-          path: /getAllUsers
-          method: GET
+getAllUsers:
+  handler: Users/getAllUsers.getAllUsers
+  events:
+    - httpApi:
+        path: /getAllUsers
+        method: GET
 
-  getByUserName:
-    handler: Users/getByUserName.getByUserName
-    events:
-      - httpApi:
-          path: /getByUserName
-          method: GET
-          
-  getUserByRole:
-    handler: Users/getUserByRole.getUserByRole  
-    events:
-      - httpApi:
-          path: /get-users-by-role-in-group
-          method: get    
+getByUserName:
+  handler: Users/getByUserName.getByUserName
+  events:
+    - httpApi:
+        path: /getByUserName
+        method: GET
 
-  getAllUsersEmail:
-    handler: Users/getAllUsersEmail.getAllUsersEmail
-    events:
-      - httpApi:
-           path: /getAllUsersEmail
-           method: get
-    
-  userRegistration:
-    handler: Users/userRegistration.handler
-    events:
-      - httpApi:
-           path: /register
-           method: post
-  
-  userLogin:
-    handler: Users/userLogin.handler
-    events:
-      - httpApi:
-           path: /login
-           method: post
-    
-    
+getUserByRole:
+  handler: Users/getUserByRole.getUserByRole
+  events:
+    - httpApi:
+        path: /get-users-by-role-in-group
+        method: get
+
+getAllUsersEmail:
+  handler: Users/getAllUsersEmail.getAllUsersEmail
+  events:
+    - httpApi:
+        path: /getAllUsersEmail
+        method: get
+
+userRegistration:
+  handler: Users/userRegistration.handler
+  events:
+    - httpApi:
+        path: /register
+        method: post
+
+userLogin:
+  handler: Users/userLogin.handler
+  events:
+    - httpApi:
+        path: /login
+        method: post
+
+changeUserPassword:
+  handler: Users/changeUserPassword.handler
+  events:
+    - httpApi:
+        path: /changePassword
+        method: post
+
+createUserAddress:
+  handler: Users/createAddress.handler
+  events:
+    - httpApi:
+        path: /addAddress
+        method: post
+
+updateUserAddress:
+  handler: Users/updateAddress.handler
+  events:
+    - httpApi:
+        path: /updateAddress
+        method: put
+getAllAddress:
+  handler: Users/getAllAddress.handler
+  events:
+    - httpApi:
+        path: /getAllAddress/{userId}
+        method: get
+
+deleteUserAddress:
+  handler: Users/deleteAddress.handler
+  events:
+    - httpApi:
+        path: /deleteAddress
+        method: delete
+
+authorizer:
+  handler: Users/authorizer.handler

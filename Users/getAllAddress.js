@@ -1,20 +1,20 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 
-// Function to check if the user exists in the Users table
-async function getUserDetails(userId) {
+// Function to check if user exists
+async function checkUserExists(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: 'Users', // Replace with your actual Users table name
         Key: {
-            UserId: userId, // Assuming 'id' is the primary key for the Users table
+            UserId: userId,
         },
     };
 
     try {
         const data = await docClient.get(params).promise();
-        return data.Item;
+        return !!data.Item; // Returns true if user exists, false otherwise
     } catch (error) {
-        console.error('Error fetching user details:', error);
+        console.error('Error checking user existence:', error);
         throw error;
     }
 }
@@ -30,10 +30,10 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Check if the user exists
-        const user = await getUserDetails(userId);
+        // Check if user exists
+        const userExists = await checkUserExists(userId);
 
-        if (!user) {
+        if (!userExists) {
             return {
                 statusCode: 404,
                 body: JSON.stringify({ message: "User not found" }),
@@ -41,8 +41,8 @@ exports.handler = async (event) => {
         }
 
         const params = {
-            TableName: 'CartItems',
-            KeyConditionExpression: 'UserId = :userId',
+            TableName: 'Addresses',
+            KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId
             }
@@ -50,26 +50,12 @@ exports.handler = async (event) => {
 
         const data = await docClient.query(params).promise();
 
-        // Calculate subtotal and savings
-        let subTotal = 0;
-        let totalSavings = 0;
-
-        data.Items.forEach(item => {
-            subTotal += item.Subtotal || 0;
-            totalSavings += item.Savings || 0;
-        });
-
-        const response = {
+        return {
             statusCode: 200,
-            body: JSON.stringify({
-                items: data.Items,
-                subTotal,
-                savings: totalSavings,
-            }),
+            body: JSON.stringify({ addresses: data.Items }),
         };
-
-        return response;
     } catch (error) {
+        console.error('Error querying addresses:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),

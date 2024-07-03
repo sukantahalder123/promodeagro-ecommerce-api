@@ -138,7 +138,9 @@
       - http:
           path: /getproducts
           method: get
-          authorizer: authorizer
+          authorizer: Users/authorizer
+
+          
   getById:
     handler: products/getById.getProductById
     timeout: 300

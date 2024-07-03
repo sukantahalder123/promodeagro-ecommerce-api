@@ -1,4 +1,3 @@
-
 # service: appkube-ecommerce-api
 
 # frameworkVersion: "3"
@@ -16,7 +15,6 @@
 #       allowedHeaders:
 #         - Content-Type
 
-
 # functions:
 
 #  # - ${file(inventory/function.yml)}
@@ -29,12 +27,10 @@
 #  # - ${file(Users/function.yml)}
 #   #- ${file(Login/function.yml)}
 
-
 #   #- ${file(catalog/function.yml)}
 
 # plugins:
 #   - serverless-offline
-
 
 service: promodeAgro-ecommerce-api
 
@@ -47,11 +43,22 @@ provider:
   runtime: nodejs18.x
   role: arn:aws:iam::851725323791:role/ecommerce_Lambda_Role
   httpApi:
+   
+    authorizers:
+      customAuthorizer:
+        type: request
+        functionName: authorizer
     cors:
       allowedOrigins:
         - "*"
       allowedHeaders:
-        - Content-Type
+        - "*"
+      allowedMethods:
+        - OPTIONS
+        - GET
+        - POST
+        - PUT
+        - DELETE
 
 functions:
   - ${file(products/function.yml)}

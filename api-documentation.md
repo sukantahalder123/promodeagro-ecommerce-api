@@ -171,6 +171,116 @@ Retrieves all items in the user's cart.
 
 
 
+## API Endpoint: Add User Address
+
+add user Address .
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/addAddress`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "string",
+    "address": {
+       address details
+    }
+}
+
+```
+
+
+## API Endpoint: update User Address
+
+update user Address .
+
+## Method
+
+- **Method**: PUT
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/updateAddress`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "string",
+    "addressId": "string",
+    "address": {
+       address details
+    }
+}
+
+```
+
+
+
+## API Endpoint: Get User Address
+
+Get user Address .
+
+## Method
+
+- **Method**: GET
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getAllAddress/{userId}`  
+
+
+
+## API Endpoint: Delete User Address
+
+Delete user Address .
+
+## Method
+
+- **Method**: DELETE
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/deleteAddress`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "string",
+    "addressId": "string",
+  
+}
+
+```
+
+
+
+
 ## API Endpoint: Get All Products
 
 ### Method

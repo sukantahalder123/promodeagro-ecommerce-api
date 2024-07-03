@@ -1,10 +1,13 @@
 const AWS = require('aws-sdk');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
 
 exports.handler = async (event) => {
     const { mobileNumber, password } = JSON.parse(event.body);
 
+    // Check for missing fields
     if (!mobileNumber || !password) {
         return {
             statusCode: 400,
@@ -12,11 +15,21 @@ exports.handler = async (event) => {
         };
     }
 
-    // Hash the provided password to match the stored PasswordHash in DynamoDB
+    // Ensure mobileNumber is a valid format (basic validation)
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(mobileNumber)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ message: "Invalid mobile number format" }),
+        };
+    }
+
+    // Hash the provided password
     const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
 
+    // Define DynamoDB query parameters
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         IndexName: 'MobileNumber-index', // Specify the index name here
         KeyConditionExpression: 'MobileNumber = :mobileNumber',
         ExpressionAttributeValues: {
@@ -25,13 +38,22 @@ exports.handler = async (event) => {
     };
 
     try {
+        // Query DynamoDB
         const data = await docClient.query(params).promise();
         const user = data.Items[0];
 
+        // Check if user exists and passwords match
         if (user && user.PasswordHash === passwordHash) {
+            // Generate a secret key for JWT signing (not stored)
+            const secretKey = crypto.randomBytes(64).toString('hex');
+            
+            // Generate a JWT token using the generated secret key
+            const token = jwt.sign({ userId: user.UserId, name: user.Name }, secretKey, { expiresIn: '1h' });
+            
+            // Return the token in the response
             return {
                 statusCode: 200,
-                body: JSON.stringify({ userId: user.UserId, name: user.Name }),
+                body: JSON.stringify({ token:token, userId: user.UserId, name: user.Name}),
             };
         } else {
             return {
@@ -42,7 +64,7 @@ exports.handler = async (event) => {
     } catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Internal Server Error", error }),
+            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }
 };

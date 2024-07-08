@@ -32,7 +32,7 @@ async function getUserDetails(userId) {
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, paymentMethod, status, userId, address, paymentDetails } = body; // Include paymentDetails here
+    const { items, paymentMethod, userId, address, paymentDetails } = body; // Include paymentDetails here
 
     // Validate input
     if (!Array.isArray(items) || items.length === 0 || !userId || !paymentDetails) { // Check for userId and paymentDetails

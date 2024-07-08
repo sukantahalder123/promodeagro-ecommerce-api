@@ -92,6 +92,8 @@ exports.handler = async (event) => {
             TableName: 'CartItems',
             Item: {
                 UserId: userId,
+                productName: product.name,
+                productImage: product.image,
                 ProductId: productId,
                 Quantity: quantity,
                 Savings: totalSavings,

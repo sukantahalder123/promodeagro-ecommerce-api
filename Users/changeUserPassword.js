@@ -1,41 +1,42 @@
-
 const AWS = require('aws-sdk');
 const crypto = require('crypto');
 const docClient = new AWS.DynamoDB.DocumentClient();
 require('dotenv').config();
 
-
-
 exports.handler = async (event) => {
-    const { userId, oldPassword, newPassword } = JSON.parse(event.body);
+    const { mobileNumber, oldPassword, newPassword } = JSON.parse(event.body);
 
-    if (!userId || !oldPassword || !newPassword) {
+    if (!mobileNumber || !oldPassword || !newPassword) {
         return {
             statusCode: 400,
             body: JSON.stringify({ message: "Missing required fields" }),
         };
     }
 
-    // Get user details
+    // Get user details by mobile number
     const userParams = {
         TableName: 'Users',
-        Key: {
-            id: userId,
+        IndexName: 'MobileNumber-index', // Assuming there's an index on 'MobileNumber'
+        KeyConditionExpression: 'MobileNumber = :mobileNumber',
+        ExpressionAttributeValues: {
+            ':mobileNumber': mobileNumber,
         },
     };
 
     try {
-        const user = await docClient.get(userParams).promise();
+        const data = await docClient.query(userParams).promise();
 
-        if (!user.Item) {
+        if (data.Items.length === 0) {
             return {
                 statusCode: 404,
                 body: JSON.stringify({ message: "User not found" }),
             };
         }
 
+        const user = data.Items[0]; // Assuming mobileNumber is unique
+
         const oldPasswordHash = crypto.createHash('sha256').update(oldPassword).digest('hex');
-        if (user.Item.PasswordHash !== oldPasswordHash) {
+        if (user.PasswordHash !== oldPasswordHash) {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Old password is incorrect" }),
@@ -46,7 +47,7 @@ exports.handler = async (event) => {
         const updateParams = {
             TableName: 'Users',
             Key: {
-                id: userId,
+                UserId: user.id, // Replace with your primary key attribute name
             },
             UpdateExpression: 'set PasswordHash = :newPasswordHash',
             ExpressionAttributeValues: {

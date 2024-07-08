@@ -306,9 +306,7 @@ The request body should be a JSON object with the following fields:
 The request body should be a JSON object with the following fields:
 ```json
 {
-  "address": {
-    address
-  },
+  "addressId":"string",
   "paymentDetails": {
     paymentdetails 
   },

@@ -1,3 +1,4 @@
+
 const { DynamoDBClient, GetItemCommand, PutItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
@@ -12,6 +13,7 @@ const dynamoDB = new DynamoDBClient({
 const orderTableName = process.env.ORDER_TABLE;
 const userTableName = process.env.USERS_TABLE;
 const productTableName = process.env.PRODUCT_TABLE;
+const addressTableName = process.env.ADDRESS_TABLE; // Add the address table name
 
 // Generate a random 5-digit number
 function generateRandomOrderId() {
@@ -28,15 +30,36 @@ async function getUserDetails(userId) {
   return userItem ? unmarshall(userItem) : null;
 }
 
+// Function to fetch address details by addressId
+async function getAddressDetails(userId, addressId) {
+  const getAddressParams = {
+    TableName: addressTableName,
+    Key: marshall({ userId: userId, addressId: addressId }) // Ensure this matches your table's key schema
+  };
+  
+  console.log('Get Address Params:', getAddressParams);
+  
+  try {
+    const { Item: addressItem } = await dynamoDB.send(new GetItemCommand(getAddressParams));
+    console.log('Fetched Address Item:', addressItem);
+    
+    return addressItem ? unmarshall(addressItem) : null;
+  } catch (error) {
+    console.error('Error fetching address:', error);
+    throw new Error('Error fetching address details');
+  }
+}
+
+
 // Handler function to create an order
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, userId, address, paymentDetails } = body; // Include paymentDetails here
+    const { items, userId, addressId, paymentDetails } = body; // Include addressId and paymentDetails here
 
     // Validate input
-    if (!Array.isArray(items) || items.length === 0 || !userId || !paymentDetails) { // Check for userId and paymentDetails
-      throw new Error('Invalid input. "items" must be a non-empty array, "userId", and "paymentDetails" are required.');
+    if (!Array.isArray(items) || items.length === 0 || !userId || !addressId || !paymentDetails) { // Check for addressId, userId, and paymentDetails
+      throw new Error('Invalid input. "items" must be a non-empty array, "userId", "addressId", and "paymentDetails" are required.');
     }
 
     const orderId = generateRandomOrderId().toString();
@@ -46,6 +69,14 @@ module.exports.handler = async (event) => {
     if (!userDetails) {
       throw new Error('User not found');
     }
+
+    console.log(userDetails)
+    // Fetch address details using addressId
+    const addressDetails = await getAddressDetails(userId,addressId);
+    if (!addressDetails) {
+      throw new Error('Address not found');
+    }
+    console.log('Fetched Address Details:', addressDetails);
 
     // Fetch product details for each item and calculate the total price
     let totalPrice = 0;
@@ -75,8 +106,8 @@ module.exports.handler = async (event) => {
       status: "PENDING",
       totalPrice: totalPrice.toString(),
       userId: userId, // Use userId instead of customerId
-      address: {address},
-      paymentDetails: {paymentDetails}, // Include paymentDetails in the orderItem
+      address: addressDetails, // Use the fetched address details
+      paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
       updatedAt: new Date().toISOString(),
       _lastChangedAt: Date.now().toString(),
       _version: '1',

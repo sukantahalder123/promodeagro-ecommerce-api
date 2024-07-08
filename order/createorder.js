@@ -32,7 +32,7 @@ async function getUserDetails(userId) {
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, paymentMethod, userId, address, paymentDetails } = body; // Include paymentDetails here
+    const { items, userId, address, paymentDetails } = body; // Include paymentDetails here
 
     // Validate input
     if (!Array.isArray(items) || items.length === 0 || !userId || !paymentDetails) { // Check for userId and paymentDetails
@@ -72,12 +72,11 @@ module.exports.handler = async (event) => {
         productId: item.productId,
         quantity: item.quantity
       })),
-      paymentMethod: paymentMethod,
-      status: status.toUpperCase() || "PENDING",
+      status: "PENDING",
       totalPrice: totalPrice.toString(),
       userId: userId, // Use userId instead of customerId
-      address: address,
-      paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
+      address: {address},
+      paymentDetails: {paymentDetails}, // Include paymentDetails in the orderItem
       updatedAt: new Date().toISOString(),
       _lastChangedAt: Date.now().toString(),
       _version: '1',

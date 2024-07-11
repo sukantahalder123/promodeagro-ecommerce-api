@@ -33,6 +33,15 @@ deleteOrderById:
           path: /deleteOrderById/{id}
           method: delete
 
+
+
+getOrderByuserId: 
+    handler: order/getOrderByUserId.handler
+    events:
+      - httpApi:
+          path: /order/{userId}
+          method: get
+
 validateOrder: 
     handler: order/validateOrder.handler
 

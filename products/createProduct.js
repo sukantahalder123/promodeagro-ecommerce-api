@@ -23,7 +23,7 @@ module.exports.handler = async (event) => {
             };
         }
 
-        const requiredFields = ['name', 'mrp', 'savingsPercentage', 'image', 'imageType', 'description', 'unit', 'category', 'availability', 'brand', 'currency', 'ratings'];
+        const requiredFields = ['name', 'mrp', 'savingsPercentage', 'image', 'imageType', 'description', 'unit', 'category','subCategory', 'availability', 'brand', 'currency', 'ratings'];
         const productData = JSON.parse(event.body);
 
         for (const field of requiredFields) {
@@ -60,6 +60,7 @@ module.exports.handler = async (event) => {
             description: productData.description,
             unit: productData.unit.toUpperCase(),
             category: productData.category.toUpperCase(),
+            subCategory:productData.subCategory,
             availability: productData.availability,
             ratings: productData.ratings,
             createdAt: new Date().toISOString(),

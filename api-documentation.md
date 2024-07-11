@@ -67,6 +67,37 @@ The request body should be a JSON object with the following fields:
 ### password: The password of the user. Requires.
 
 
+## API Endpoint: Change User Password
+
+This endpoint is used to change user password.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/changePassword`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "mobileNumber":"string", 
+    "oldPassword":"string", 
+    "newPassword":"string"
+}
+```
+
+### mobileNumber: The phone number of the user. Required.
+### password: The password of the user. Requires.
+
 
 
 
@@ -291,6 +322,17 @@ The request body should be a JSON object with the following fields:
 
 ---
 
+
+## API Endpoint: Get Product by productId
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product/{productId}`
+
+
+
 ## API Endpoint: Create Order
 
 ### Method
@@ -323,3 +365,22 @@ The request body should be a JSON object with the following fields:
   "userId": "string"
 }
 ```
+
+
+## API Endpoint: Get All Orders of user
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order/{userId}`
+
+
+
+## API Endpoint: Get Order by orderId
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order/{orderId}`

@@ -4,6 +4,8 @@
     "@aws-sdk/util-dynamodb": "^3.540.0",
     "aws-sdk": "^2.1576.0",
     "axios": "^1.6.8",
+    "dayjs": "^1.11.11",
+    "dayjs-ext": "^2.2.0",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.4",

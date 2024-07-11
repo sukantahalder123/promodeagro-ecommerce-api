@@ -20,11 +20,6 @@ getAllProduct:
         path: /product
         method: get
         
-     
-
-        
-           # Corrected method to match the intended action
-
 delete:
   handler: products/delete.deleteProduct
   timeout: 300

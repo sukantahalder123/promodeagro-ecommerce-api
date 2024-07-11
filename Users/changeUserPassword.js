@@ -23,6 +23,8 @@ exports.handler = async (event) => {
         },
     };
 
+    
+
     try {
         const data = await docClient.query(userParams).promise();
 
@@ -47,7 +49,7 @@ exports.handler = async (event) => {
         const updateParams = {
             TableName: 'Users',
             Key: {
-                UserId: user.id, // Replace with your primary key attribute name
+                UserId: user.UserId, // Replace with your primary key attribute name
             },
             UpdateExpression: 'set PasswordHash = :newPasswordHash',
             ExpressionAttributeValues: {
@@ -55,6 +57,8 @@ exports.handler = async (event) => {
             },
             ReturnValues: 'UPDATED_NEW',
         };
+
+        console.log(updateParams);
 
         await docClient.update(updateParams).promise();
         return {

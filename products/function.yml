@@ -42,3 +42,11 @@ searchApi:
       - httpApi:
           path: /products
           method: get
+
+
+productFilter:
+    handler: products/productFilter.handler
+    events:
+      - httpApi:
+          path: /products/filter
+          method: get

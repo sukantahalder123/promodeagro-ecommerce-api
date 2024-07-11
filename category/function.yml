@@ -1,0 +1,13 @@
+createCategory:
+  handler: category/createCategory.handler
+  events:
+    - httpApi:
+        path: /category
+        method: post
+
+getAllCategory:
+  handler: category/getAllCategory.handler
+  events:
+    - httpApi:
+        path: /category
+        method: get

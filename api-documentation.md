@@ -96,7 +96,9 @@ The request body should be a JSON object with the following fields:
 ```
 
 ### mobileNumber: The phone number of the user. Required.
-### password: The password of the user. Requires.
+### oldPassword: The oldPassword of the user. Requires.
+### newPassword: The newPassword of the user. Requires.
+
 
 
 
@@ -331,6 +333,34 @@ The request body should be a JSON object with the following fields:
 ### URL
 - **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product/{productId}`
 
+
+## API Endpoint: Product Filters
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/products`
+
+## Query Parameters (Optional)
+### name: Filter by product name.
+### minPrice: Filter by minimum price.
+### maxPrice: Filter by maximum price.
+### discounts: Filter by discount ranges. Provide values like upto10, 10to15, 15to25, morethan25.
+### Example Request:  GET https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/products?name=apple&minPrice=5&maxPrice=15&discounts=upto10,10to15
+This request retrieves details of the product with productId equal to 123456, filtered by name 'apple', prices between 5 and 15, and discounts ranging from up to 10% to 10% to 15%.
+
+---
+
+## API Endpoint: Get All Categories
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/category`
+
+---
 
 
 ## API Endpoint: Create Order

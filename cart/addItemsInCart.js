@@ -38,9 +38,9 @@ async function getUserDetails(userId) {
 }
 
 exports.handler = async (event) => {
-    const { userId, productId, quantity } = JSON.parse(event.body);
+    const { userId, productId, quantity, quantityUnits } = JSON.parse(event.body);
 
-    if (!userId || !productId || !quantity) {
+    if (!userId || !productId || !quantity || !quantityUnits) {
         return {
             statusCode: 400,
             body: JSON.stringify({ message: "Missing required fields" }),
@@ -68,26 +68,33 @@ exports.handler = async (event) => {
             };
         }
 
-        // Convert savingsPercentage and mrp to numbers
-        const savingsPercentage = Number(product.savingsPercentage);
-        const mrp = Number(product.mrp);
+        // Find the appropriate unit price based on quantityUnits
+        let unitPrice = null;
+        for (let i = product.unitPrices.length - 1; i >= 0; i--) {
+            if (quantityUnits === product.unitPrices[i].qty) {
+                unitPrice = product.unitPrices[i];
+                break;
+            }
+        }
 
-        // Ensure savingsPercentage and mrp are valid numbers
-        if (isNaN(savingsPercentage) || isNaN(mrp)) {
+        if (!unitPrice) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "Invalid product data" }),
+                body: JSON.stringify({ message: "Invalid quantity units" }),
             };
         }
 
-        // Calculate savings and adjust price
-        const savings = (savingsPercentage / 100) * mrp;
-        const price = mrp - savings;
+        const price = unitPrice.price;
+        const mrp = unitPrice.mrp;
+        const savings = unitPrice.savings * quantity;
 
-        // Calculate subtotal
+        // Calculate total quantity in grams
+        const totalQuantityInGrams = quantity * quantityUnits;
+
+        // Calculate the subtotal and total savings for the quantity
         const subtotal = price * quantity;
-        const totalSavings = savings * quantity;
 
+        // Prepare the item to be stored in the CartItems table
         const params = {
             TableName: 'CartItems',
             Item: {
@@ -95,11 +102,13 @@ exports.handler = async (event) => {
                 productName: product.name,
                 productImage: product.image,
                 ProductId: productId,
-                Quantity: quantity,
-                Savings: totalSavings,
+                Quantity: quantity, // Store the original quantity in units (e.g., 10 units)
+                QuantityUnits: quantityUnits, // Store the quantity units (e.g., 500 grams)
+                Savings: savings,
                 Price: price,
                 Subtotal: subtotal,
                 Mrp: mrp
+                
             },
         };
 
@@ -107,7 +116,7 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Item added to cart successfully" }),
+            body: JSON.stringify({ message: "Item added to cart successfully", subtotal }),
         };
     } catch (error) {
         console.error('Error adding item to cart:', error);

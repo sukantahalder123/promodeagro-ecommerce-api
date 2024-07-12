@@ -74,5 +74,20 @@ deleteUserAddress:
         path: /deleteAddress
         method: delete
 
+setDefaultAddress:
+  handler: Users/setDefaultAddress.handler
+  events:
+    - httpApi:
+        path: /setDefaultAddress
+        method: post
+
+
+getDefaultAddress:
+  handler: Users/getDefaultAddress.handler
+  events:
+    - httpApi:
+        path: /getDefaultAddress/{userId}
+        method: get
+
 authorizer:
   handler: Users/authorizer.handler

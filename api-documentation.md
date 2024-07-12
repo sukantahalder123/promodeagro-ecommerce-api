@@ -125,9 +125,10 @@ The request body should be a JSON object with the following fields:
 
 ```json
 {
-  "userId": "string",
-  "productId": "string",
-  "quantity": "string"
+    "userId": "string",
+    "productId": "string",
+    "quantity": 'int',
+    "quantityUnits": 'int'
 }
 
 ```
@@ -154,9 +155,10 @@ The request body should be a JSON object with the following fields:
 
 ```json
 {
-  "userId": "string",
-  "productId": "string",
-  "quantity": "string"
+    "userId": "string",
+    "productId": "string",
+    "quantity": 'int',
+    "quantityUnits": 'int'
 }
 
 ```
@@ -313,6 +315,49 @@ The request body should be a JSON object with the following fields:
 
 
 
+## API Endpoint: Set Default Address
+
+Set default Address .
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/setDefaultAddress`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "string",
+    "addressId": "string",
+  
+}
+
+```
+
+
+## API Endpoint: Get Default Address
+
+Get default Address .
+
+## Method
+
+- **Method**: GET
+
+## URL
+
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getDefaultAddress/{userId}`  
+
+
 
 ## API Endpoint: Get All Products
 
@@ -331,8 +376,9 @@ The request body should be a JSON object with the following fields:
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product/{productId}`
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product/{productId}?userId={userId}`
 
+  it return cartItems of user if its added in the cart 
 
 ## API Endpoint: Product Filters
 

@@ -23,8 +23,6 @@ exports.handler = async (event) => {
         },
     };
 
-    
-
     try {
         const data = await docClient.query(userParams).promise();
 
@@ -46,6 +44,15 @@ exports.handler = async (event) => {
         }
 
         const newPasswordHash = crypto.createHash('sha256').update(newPassword).digest('hex');
+        
+        // Check if old and new password hashes are the same
+        if (user.PasswordHash === newPasswordHash) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: "New password must be different from the old password" }),
+            };
+        }
+
         const updateParams = {
             TableName: 'Users',
             Key: {
@@ -57,8 +64,6 @@ exports.handler = async (event) => {
             },
             ReturnValues: 'UPDATED_NEW',
         };
-
-        console.log(updateParams);
 
         await docClient.update(updateParams).promise();
         return {

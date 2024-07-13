@@ -1,13 +1,8 @@
-const { DynamoDBClient, GetItemCommand, PutItemCommand ,DeleteItemCommand} = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, GetItemCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
-const AWS = require('aws-sdk');
 
 const { v4: uuidv4 } = require('uuid');
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc'); // Import utc plugin for dayjs
-
-dayjs.extend(utc); // Extend dayjs with utc plugin
 
 // Create DynamoDB client with options to remove undefined values
 const dynamoDB = new DynamoDBClient({
@@ -18,6 +13,8 @@ const orderTableName = process.env.ORDER_TABLE;
 const userTableName = process.env.USERS_TABLE;
 const productTableName = process.env.PRODUCT_TABLE;
 const addressTableName = process.env.ADDRESS_TABLE; // Add the address table name
+const cartTableName = process.env.CART_TABLE; // Add the cart table name
+const deliverySlotTableName = process.env.DELIVERY_SLOT_TABLE; // Add the delivery slot table name
 
 // Generate a random 5-digit number
 function generateRandomOrderId() {
@@ -34,43 +31,15 @@ async function getUserDetails(userId) {
   return userItem ? unmarshall(userItem) : null;
 }
 
-
-async function deleteCartItem(userId, productId) {
-  const params = {
-    TableName: 'CartItems',
-    Key: {
-      'UserId': { S: userId },      // Assuming userId is a string
-      'ProductId': { S: productId } // Assuming productId is a string
-    }
-  };
-
-  try {
-    await dynamoDB.send(new DeleteItemCommand(params));
-
-    console.log("Item deleted successfully")
-    return { message: "Cart item deleted successfully" };
-    
-  } catch (error) {
-    console.error("Error deleting cart item:", error);
-    throw new Error("Internal Server Error");
-  }
-}
-
-
-
 // Function to fetch address details by addressId
 async function getAddressDetails(userId, addressId) {
   const getAddressParams = {
     TableName: addressTableName,
     Key: marshall({ userId: userId, addressId: addressId }) // Ensure this matches your table's key schema
   };
-
-  console.log('Get Address Params:', getAddressParams);
-
+  
   try {
     const { Item: addressItem } = await dynamoDB.send(new GetItemCommand(getAddressParams));
-    console.log('Fetched Address Item:', addressItem);
-
     return addressItem ? unmarshall(addressItem) : null;
   } catch (error) {
     console.error('Error fetching address:', error);
@@ -78,16 +47,85 @@ async function getAddressDetails(userId, addressId) {
   }
 }
 
+// Function to fetch product details by productId
+async function getProductDetails(productId, quantity, quantityUnits) {
+  const getProductParams = {
+    TableName: productTableName,
+    Key: marshall({ id: productId })
+  };
+  const { Item: productItem } = await dynamoDB.send(new GetItemCommand(getProductParams));
+  if (!productItem) {
+    throw new Error(`Product with ID ${productId} not found`);
+  }
+  const product = unmarshall(productItem);
+
+  // Find the appropriate unit price based on quantityUnits
+  let unitPrice = null;
+  for (let i = product.unitPrices.length - 1; i >= 0; i--) {
+    if (quantityUnits === product.unitPrices[i].qty) {
+      unitPrice = product.unitPrices[i];
+      break;
+    }
+  }
+
+  if (!unitPrice) {
+    throw new Error("Invalid quantity units");
+  }
+
+  const price = unitPrice.price;
+  const mrp = unitPrice.mrp;
+  const savings = unitPrice.savings * quantity;
+
+  // Calculate total quantity in grams
+  const totalQuantityInGrams = quantity * quantityUnits;
+
+  // Calculate the subtotal and total savings for the quantity
+  const subtotal = price * quantity;
+
+  return {
+    product,
+    price,
+    mrp,
+    savings,
+    subtotal
+  };
+}
+
+// Function to delete cart items by userId and productId
+async function deleteCartItem(userId, productId) {
+  const deleteParams = {
+    TableName: cartTableName,
+    Key: marshall({ UserId: userId, ProductId: productId })
+  };
+
+  await dynamoDB.send(new DeleteItemCommand(deleteParams));
+}
+
+// Function to fetch delivery slot details by slotId
+async function getDeliverySlotDetails(slotId) {
+  const getSlotParams = {
+    TableName: deliverySlotTableName,
+    Key: marshall({ slotId })
+  };
+
+  try {
+    const { Item: slotItem } = await dynamoDB.send(new GetItemCommand(getSlotParams));
+    return slotItem ? unmarshall(slotItem) : null;
+  } catch (error) {
+    console.error('Error fetching delivery slot:', error);
+    throw new Error('Error fetching delivery slot details');
+  }
+}
 
 // Handler function to create an order
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, userId, addressId, paymentDetails } = body; // Include addressId and paymentDetails here
+    const { items, userId, addressId, paymentDetails, deliverySlotId } = body; // Include addressId, paymentDetails, and deliverySlotId here
 
     // Validate input
-    if (!Array.isArray(items) || items.length === 0 || !userId || !addressId || !paymentDetails) { // Check for addressId, userId, and paymentDetails
-      throw new Error('Invalid input. "items" must be a non-empty array, "userId", "addressId", and "paymentDetails" are required.');
+    if (!Array.isArray(items) || items.length === 0 || !userId || !addressId || !paymentDetails || !deliverySlotId) { // Check for addressId, userId, paymentDetails, and deliverySlotId
+      throw new Error('Invalid input. "items" must be a non-empty array, "userId", "addressId", "paymentDetails", and "deliverySlotId" are required.');
     }
 
     const orderId = generateRandomOrderId().toString();
@@ -98,46 +136,60 @@ module.exports.handler = async (event) => {
       throw new Error('User not found');
     }
 
-    console.log(userDetails)
     // Fetch address details using addressId
     const addressDetails = await getAddressDetails(userId, addressId);
     if (!addressDetails) {
       throw new Error('Address not found');
     }
-    console.log('Fetched Address Details:', addressDetails);
 
-    // Fetch product details for each item and calculate the total price
-    let totalPrice = 0;
-    const products = [];
-    for (const item of items) {
-      const getProductParams = {
-        TableName: productTableName,
-        Key: marshall({ id: item.productId })
-      };
-      const { Item: productItem } = await dynamoDB.send(new GetItemCommand(getProductParams));
-      if (!productItem) {
-        throw new Error(`Product with ID ${item.productId} not found`);
-      }
-      const product = unmarshall(productItem);
-      products.push(product);
-      totalPrice += product.price * item.quantity;
+    // Fetch delivery slot details using deliverySlotId
+    const deliverySlotDetails = await getDeliverySlotDetails(deliverySlotId);
+    if (!deliverySlotDetails) {
+      throw new Error('Delivery slot not found');
     }
 
-    // Prepare order item with current IST date and time
-    const istDate = dayjs().utcOffset(330).format('YYYY-MM-DDTHH:mm:ss.SSSZ'); // Get current IST time with UTC offset +5:30 (IST)
+    // Prepare order items with calculated totals
+    let totalPrice = 0;
+    let totalSavings = 0; // Initialize totalSavings accumulator
+    const orderItems = [];
+    for (const item of items) {
+      const { product, price, mrp, savings, subtotal } = await getProductDetails(item.productId, item.quantity, item.quantityUnits);
+
+      totalPrice += subtotal;
+      totalSavings += savings; // Accumulate savings for each item
+
+      orderItems.push({
+        productId: item.productId,
+        productName: product.name,
+        quantity: item.quantity,
+        quantityUnits: item.quantityUnits,
+        price: price,
+        mrp: mrp,
+        savings: savings,
+        subtotal: subtotal
+      });
+
+      // Delete the item from the cart after processing
+      await deleteCartItem(userId, item.productId);
+    }
+
+    // Prepare order item
     const orderItem = {
       id: orderId,
-      createdAt: istDate, // Store in IST format
-      items: items.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity
-      })),
-      status: "PENDING",
+      createdAt: new Date().toISOString(),
+      items: orderItems,
       totalPrice: totalPrice.toString(),
-      userId: userId,
-      address: addressDetails,
-      paymentDetails: paymentDetails,
-      updatedAt: istDate, // Set updatedAt to current IST time
+      totalSavings: totalSavings.toString(), // Include totalSavings in the order item
+      userId: userId, // Use userId instead of customerId
+      address: addressDetails, // Use the fetched address details
+      paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
+      deliverySlot: {
+        id: deliverySlotDetails.slotId,
+        startTime: deliverySlotDetails.startTime,
+        endTime: deliverySlotDetails.endTime
+      },
+      status: "PLACED",
+      updatedAt: new Date().toISOString(),
       _lastChangedAt: Date.now().toString(),
       _version: '1',
       __typename: 'Order'
@@ -149,20 +201,13 @@ module.exports.handler = async (event) => {
       Item: marshall(orderItem)
     };
 
-
-    for (const item of items) {
-      await deleteCartItem(userId, item.productId);
-    }
-
-
-
     await dynamoDB.send(new PutItemCommand(putParams));
 
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Order created successfully', orderId: orderId }),
     };
-
+    
   } catch (error) {
     console.error('Error:', error.message);
     return {

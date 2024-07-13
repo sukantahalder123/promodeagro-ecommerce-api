@@ -424,22 +424,29 @@ This request retrieves details of the product with productId equal to 123456, fi
 The request body should be a JSON object with the following fields:
 ```json
 {
-  "addressId":"string",
-  "paymentDetails": {
-    paymentdetails 
-  },
   "items": [
     {
       "productId": "string",
-      "quantity": "string"
+      "quantity": 2,
+      "quantityUnits": 500
     },
     {
       "productId": "string",
-      "quantity": "string"
+      "quantity": 1,
+      "quantityUnits": 1000
     }
   ],
-  "userId": "string"
+  "userId": "string",
+  "addressId": "string",
+  "paymentDetails": {
+    "paymentMethod": "string",
+    "totalAmount": 120.50,
+    "transactionId": "string",
+    "paymentStatus": "string"
+  },
+  "deliverySlotId": "string"
 }
+
 ```
 
 
@@ -460,3 +467,13 @@ The request body should be a JSON object with the following fields:
 
 ### URL
 - **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order/{orderId}`
+
+
+
+## API Endpoint: Get Available Delivery Slots
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getAvailableDeliverySlots`

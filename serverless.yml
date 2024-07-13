@@ -76,6 +76,8 @@ functions:
   - ${file(stepFunctions/function.yml)}
   - ${file(cart/function.yml)}
   - ${file(category/function.yml)}
+  - ${file(deliverySlots/function.yml)}
+
 
 
   # - ${file(webhooks/function.yml)}

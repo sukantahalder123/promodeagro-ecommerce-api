@@ -1,0 +1,14 @@
+createDeliverySlot:
+    handler: deliverySlots/createDeliverySlots.handler
+    events:
+      - httpApi:
+          path: /deliverySlot
+          method: post   
+
+
+getAllAvailableDeliverySlots:
+    handler: deliverySlots/getAllAvailableDeliverySlots.handler
+    events:
+      - httpApi:
+          path: /getAvailableDeliverySlots
+          method: get

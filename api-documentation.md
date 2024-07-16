@@ -396,6 +396,17 @@ Get default Address .
 This request retrieves details of the product with  prices between 5 and 15, and discounts ranging from up to 5% ,to 10% to 15%,15% to 25,morethan25.
 
 ---
+## API Endpoint: Global Searh
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products/search?query={name}`
+
+---
+
+
 ## API Endpoint: Get Products By category
 
 ### Method

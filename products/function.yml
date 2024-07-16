@@ -44,11 +44,11 @@ searchApi:
           method: get
 
 
-productFilter:
-    handler: products/productFilter.handler
+globalSearch:
+    handler: products/globalSearch.handler
     events:
       - httpApi:
-          path: /products/filter
+          path: /products/search
           method: get
 
 getByCategory:

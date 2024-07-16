@@ -12,7 +12,7 @@ This endpoint is used to register user.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/register`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/register`
 
 ## Content-Type
 
@@ -46,7 +46,7 @@ This endpoint is used to login user.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/login`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/login`
 
 ## Content-Type
 
@@ -77,7 +77,7 @@ This endpoint is used to change user password.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/changePassword`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/changePassword`
 
 ## Content-Type
 
@@ -113,7 +113,7 @@ This endpoint is used to add products Items in cart.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/cart/addItem`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/addItem`  
 
 ## Content-Type
 
@@ -143,7 +143,7 @@ Updates the quantity of an item in the user's cart .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/cart/updateItem`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/updateItem`  
 
 ## Content-Type
 
@@ -173,7 +173,7 @@ Deletes an item from the user's cart.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/cart/deleteItem`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/deleteItem`  
 
 ## Content-Type
 
@@ -202,7 +202,7 @@ Retrieves all items in the user's cart.
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/cart/getItems/{userId}`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/getItems/{userId}`  
 
 
 
@@ -216,7 +216,7 @@ add user Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/addAddress`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/addAddress`  
 
 ## Content-Type
 
@@ -247,7 +247,7 @@ update user Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/updateAddress`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/updateAddress`  
 
 ## Content-Type
 
@@ -280,7 +280,7 @@ Get user Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getAllAddress/{userId}`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getAllAddress/{userId}`  
 
 
 
@@ -294,7 +294,7 @@ Delete user Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/deleteAddress`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/deleteAddress`  
 
 ## Content-Type
 
@@ -325,7 +325,7 @@ Set default Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/setDefaultAddress`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/setDefaultAddress`  
 
 ## Content-Type
 
@@ -355,7 +355,7 @@ Get default Address .
 
 ## URL
 
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getDefaultAddress/{userId}`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getDefaultAddress/{userId}`  
 
 
 
@@ -365,7 +365,7 @@ Get default Address .
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/product`
 
 ---
 
@@ -376,7 +376,7 @@ Get default Address .
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/product/{productId}?userId={userId}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/product/{productId}?userId={userId}`
 
   it return cartItems of user if its added in the cart 
 
@@ -386,17 +386,38 @@ Get default Address .
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/products`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products`
 
 ## Query Parameters (Optional)
-### name: Filter by product name.
 ### minPrice: Filter by minimum price.
 ### maxPrice: Filter by maximum price.
 ### discounts: Filter by discount ranges. Provide values like upto10, 10to15, 15to25, morethan25.
-### Example Request:  GET https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/products?name=apple&minPrice=5&maxPrice=15&discounts=upto10,10to15
+### Example Request:  GET https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products?name=apple&minPrice=5&maxPrice=15&discounts=upto10,10to15
 This request retrieves details of the product with productId equal to 123456, filtered by name 'apple', prices between 5 and 15, and discounts ranging from up to 10% to 10% to 15%.
 
 ---
+## API Endpoint: Get Products By category
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductByCategory?category={category}`
+
+---
+
+## API Endpoint: Get Products By SubCategory
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductBySubCategory?subcategory={subcategory}`
+
+---
+
+
+
 
 ## API Endpoint: Get All Categories
 
@@ -404,9 +425,14 @@ This request retrieves details of the product with productId equal to 123456, fi
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/category`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/category`
 
 ---
+
+
+
+
+
 
 
 ## API Endpoint: Create Order
@@ -415,7 +441,7 @@ This request retrieves details of the product with productId equal to 123456, fi
 - **Method**: POST
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/order`
 
 ### Content-Type
 - **Content-Type**: `application/json`
@@ -456,7 +482,7 @@ The request body should be a JSON object with the following fields:
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order/{userId}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/order/{userId}`
 
 
 
@@ -466,7 +492,7 @@ The request body should be a JSON object with the following fields:
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/order/{orderId}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/order/{orderId}`
 
 
 
@@ -476,4 +502,4 @@ The request body should be a JSON object with the following fields:
 - **Method**: GET
 
 ### URL
-- **URL**: `https://khs9kwylpc.execute-api.us-east-1.amazonaws.com/getAvailableDeliverySlots`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getAvailableDeliverySlots`

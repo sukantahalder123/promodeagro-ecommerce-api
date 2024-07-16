@@ -8,7 +8,7 @@ exports.handler = async (event) => {
 
     if (!mobileNumber || !oldPassword || !newPassword) {
         return {
-            statusCode: 400,
+            statusCode: 200,
             body: JSON.stringify({ message: "Missing required fields" }),
         };
     }
@@ -28,7 +28,7 @@ exports.handler = async (event) => {
 
         if (data.Items.length === 0) {
             return {
-                statusCode: 404,
+                statusCode: 200,
                 body: JSON.stringify({ message: "User not found" }),
             };
         }
@@ -38,7 +38,7 @@ exports.handler = async (event) => {
         const oldPasswordHash = crypto.createHash('sha256').update(oldPassword).digest('hex');
         if (user.PasswordHash !== oldPasswordHash) {
             return {
-                statusCode: 400,
+                statusCode: 200,
                 body: JSON.stringify({ message: "Old password is incorrect" }),
             };
         }
@@ -48,7 +48,7 @@ exports.handler = async (event) => {
         // Check if old and new password hashes are the same
         if (user.PasswordHash === newPasswordHash) {
             return {
-                statusCode: 400,
+                statusCode: 200,
                 body: JSON.stringify({ message: "New password must be different from the old password" }),
             };
         }

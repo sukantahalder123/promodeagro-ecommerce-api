@@ -51,7 +51,7 @@ exports.handler = async (event) => {
     
     if (!mobileNumber || !password || !name) {
         return {
-            statusCode: 400,
+            statusCode: 200,
             body: JSON.stringify({ message: "Missing required fields" }),
         };
     }
@@ -60,7 +60,7 @@ exports.handler = async (event) => {
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(mobileNumber)) {
         return {
-            statusCode: 400,
+            statusCode: 200,
             body: JSON.stringify({ message: "Invalid mobile number format" }),
         };
     }
@@ -70,7 +70,7 @@ exports.handler = async (event) => {
         const mobileExists = await checkMobileNumberExists(mobileNumber);
         if (mobileExists) {
             return {
-                statusCode: 400,
+                statusCode: 200,
                 body: JSON.stringify({ message: "Mobile number already registered" }),
             };
         }
@@ -79,7 +79,7 @@ exports.handler = async (event) => {
         const nameExists = await checkNameExists(name);
         if (nameExists) {
             return {
-                statusCode: 400,
+                statusCode: 200,
                 body: JSON.stringify({ message: "Name already registered" }),
             };
         }

@@ -29,8 +29,7 @@ module.exports.getProductById = async (event) => {
       };
     }
 
-    // Prepare response object
-    const response = {
+    let response = {
       statusCode: 200,
       body: JSON.stringify(productData.Item),
     };
@@ -46,6 +45,19 @@ module.exports.getProductById = async (event) => {
       };
       const cartData = await dynamoDB.get(cartParams).promise();
 
+      const defaultCartItem = {
+        ProductId: productId,
+        UserId: userId,
+        Savings: 0,
+        QuantityUnits: 0,
+        Subtotal: 0,
+        Price: 0,
+        Mrp: 0,
+        Quantity: 0,
+        productImage: productData.Item.image || '',
+        productName: productData.Item.name || ''
+      };
+
       if (cartData.Item) {
         // If product exists in cart, add cart information to response
         response.body = JSON.stringify({
@@ -54,10 +66,11 @@ module.exports.getProductById = async (event) => {
           cartItem: cartData.Item
         });
       } else {
-        // If product does not exist in cart, return basic product details
+        // If product does not exist in cart, return basic product details with default cart item
         response.body = JSON.stringify({
           ...productData.Item,
-          inCart: false
+          inCart: false,
+          cartItem: defaultCartItem
         });
       }
     }

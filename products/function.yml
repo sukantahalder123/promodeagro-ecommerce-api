@@ -50,3 +50,19 @@ productFilter:
       - httpApi:
           path: /products/filter
           method: get
+
+getByCategory:
+  handler: products/getProductsByCategory.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /getProductByCategory
+        method: get
+
+getBySubCategory:
+  handler: products/getProductsBySubCategory.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /getProductBySubCategory
+        method: get

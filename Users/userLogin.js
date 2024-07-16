@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(mobileNumber)) {
         return {
-            statusCode: 400,
+            statusCode: 200,
             body: JSON.stringify({ message: "Invalid mobile number format" }),
         };
     }
@@ -53,11 +53,11 @@ exports.handler = async (event) => {
             // Return the token in the response
             return {
                 statusCode: 200,
-                body: JSON.stringify({ token:token, userId: user.UserId, name: user.Name}),
+                body: JSON.stringify({ token: token, userId: user.UserId, name: user.Name }),
             };
         } else {
             return {
-                statusCode: 401,
+                statusCode: 200,
                 body: JSON.stringify({ message: "Invalid mobile number or password" }),
             };
         }

@@ -1,0 +1,13 @@
+createProductReviews:
+  handler: reviews/createReviews.handler
+  events:
+    - httpApi:
+        path: /addProductReview
+        method: post
+
+getProductReviews:
+  handler: reviews/getReviews.handler
+  events:
+    - httpApi:
+        path: /getProductReview/{productId}
+        method: get

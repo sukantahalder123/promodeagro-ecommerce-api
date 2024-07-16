@@ -1,0 +1,26 @@
+createOffers:
+    handler: offers/createOffers.handler
+    events:
+      - httpApi:
+          path: /createOffer
+          method: post
+          
+updateOffers:
+    handler: offers/updateOffers.handler
+    events:
+      - httpApi:
+          path: /updateOffer/{offerId}
+          method: put
+getAllOffers:
+    handler: offers/getAllOffers.handler
+    events:
+      - httpApi:
+          path: /getAllOffers
+          method: get
+
+getOffersProductsByOffersId:
+    handler: offers/getOffersProductsByOfferId.handler
+    events:
+      - httpApi:
+          path: /getOffersProductsByOffersId/{offerId}
+          method: get

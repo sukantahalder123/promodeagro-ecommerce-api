@@ -77,6 +77,10 @@ functions:
   - ${file(cart/function.yml)}
   - ${file(category/function.yml)}
   - ${file(deliverySlots/function.yml)}
+  - ${file(offers/function.yml)}
+  - ${file(reviews/function.yml)}
+
+
 
 
 

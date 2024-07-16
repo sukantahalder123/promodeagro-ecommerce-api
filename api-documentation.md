@@ -443,6 +443,67 @@ This request retrieves details of the product with  prices between 5 and 15, and
 
 
 
+## API Endpoint: Get All Offers
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getAllOffers`
+
+---
+
+
+## API Endpoint: Get All Products In Offer  By OfferId
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getOffersProductsByOffersId/{offerId} `
+
+---
+
+
+
+## API Endpoint: Add Product Reviews
+
+### Method
+- **Method**: Post
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/addProductReview`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+  "productId": "string",
+  "userId": "string",
+  "rating": int  "between 1 to 5",
+  "review": "string"
+}
+
+
+```
+
+
+## API Endpoint: Get All Products Reviews
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductReview/{productId}`
+
+---
+
 
 
 

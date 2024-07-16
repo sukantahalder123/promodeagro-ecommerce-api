@@ -11,13 +11,13 @@ exports.handler = async (event) => {
     let filterExpression = '';
     const expressionAttributeValues = {};
 
-    if (name) {
-        filterExpression += 'contains(#name, :name)';
-        expressionAttributeValues[':name'] = name.toLowerCase();
-        params.ExpressionAttributeNames = {
-            '#name': 'name',
-        };
-    }
+    // if (name) {
+    //     filterExpression += 'contains(#name, :name)';
+    //     expressionAttributeValues[':name'] = name.toLowerCase();
+    //     params.ExpressionAttributeNames = {
+    //         '#name': 'name',
+    //     };
+    // }
 
     if (minPrice && maxPrice) {
         if (filterExpression.length > 0) {

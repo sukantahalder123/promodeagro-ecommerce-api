@@ -10,8 +10,8 @@ exports.handler = async (event) => {
     // Check for missing fields
     if (!mobileNumber || !password) {
         return {
-            statusCode: 400,
-            body: JSON.stringify({ message: "Missing required fields" }),
+            statusCode: 200,
+            body: JSON.stringify({ message: "Missing required fields" ,statusCode: 401}),
         };
     }
 
@@ -20,7 +20,7 @@ exports.handler = async (event) => {
     if (!mobileRegex.test(mobileNumber)) {
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Invalid mobile number format" }),
+            body: JSON.stringify({ message: "Invalid mobile number format" ,statusCode: 401}),
         };
     }
 
@@ -53,12 +53,12 @@ exports.handler = async (event) => {
             // Return the token in the response
             return {
                 statusCode: 200,
-                body: JSON.stringify({ token: token, userId: user.UserId, name: user.Name }),
+                body: JSON.stringify({ token: token, userId: user.UserId, name: user.Name,statusCode:200 }),
             };
         } else {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "Invalid mobile number or password" }),
+                body: JSON.stringify({ message: "Invalid mobile number or password" ,statusCode:401 }),
             };
         }
     } catch (error) {

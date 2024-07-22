@@ -574,4 +574,10 @@ The request body should be a JSON object with the following fields:
 - **Method**: GET
 
 ### URL
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getAvailableDeliverySlots`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getAvailableDeliverySlots?day={day}`
+
+   ## Query Parameters
+       ### day: (required) The day for which to retrieve available delivery slots. Can be one of the following values:
+       ### today: Get slots for the current day.
+       ### tomorrow: Get slots for the next day.
+       ### YYYY-MM-DD: Get slots for a specific date in the YYYY-MM-DD format.

@@ -54,8 +54,8 @@ exports.handler = async (event) => {
 
         if (!data.Item || !data.Item.defaultAddressId) {
             return {
-                statusCode: 404,
-                body: JSON.stringify({ message: "Default address not found for the user" }),
+                statusCode: 200,
+                body: JSON.stringify({ message: "Default address not found for the user",status:404 }),
             };
         }
 
@@ -72,14 +72,14 @@ exports.handler = async (event) => {
 
         if (!addressData.Item) {
             return {
-                statusCode: 404,
-                body: JSON.stringify({ message: "Default address details not found" }),
+                statusCode: 200,
+                body: JSON.stringify({ message: "Default address details not found",status:404 }),
             };
         }
 
         return {
             statusCode: 200,
-            body: JSON.stringify(addressData.Item),
+            body: JSON.stringify(addressData.Item), status:200
         };
     } catch (error) {
         return {

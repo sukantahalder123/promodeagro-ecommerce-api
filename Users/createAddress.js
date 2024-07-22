@@ -6,7 +6,7 @@ require('dotenv').config();
 // Function to check if user exists
 async function checkUserExists(userId) {
     const params = {
-        TableName: process.env.USERS_TABLE, // Replace with your actual Users table name
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -17,6 +17,24 @@ async function checkUserExists(userId) {
         return !!data.Item;
     } catch (error) {
         console.error('Error checking user existence:', error);
+        throw error;
+    }
+}
+
+// Function to get user details
+async function getUserDetails(userId) {
+    const params = {
+        TableName: process.env.USERS_TABLE,
+        Key: {
+            UserId: userId,
+        },
+    };
+
+    try {
+        const data = await docClient.get(params).promise();
+        return data.Item;
+    } catch (error) {
+        console.error('Error retrieving user details:', error);
         throw error;
     }
 }
@@ -42,22 +60,46 @@ exports.handler = async (event) => {
             };
         }
 
+        // Get user details
+        const user = await getUserDetails(userId);
+
         const addressId = crypto.randomUUID();
-        const params = {
+
+        // Create the new address
+        const addressParams = {
             TableName: 'Addresses',
             Item: {
-                userId: userId,  // Ensure consistent casing for attribute names
-                addressId: addressId,  // Ensure consistent casing for attribute names
+                userId: userId,
+                addressId: addressId,
                 ...address,
             },
         };
 
-        await docClient.put(params).promise();
+        await docClient.put(addressParams).promise();
+
+        // If no default address exists, set the new address as the default
+        if (!user.defaultAddressId) {
+            const updateParams = {
+                TableName: process.env.USERS_TABLE,
+                Key: {
+                    UserId: userId,
+                },
+                UpdateExpression: 'set defaultAddressId = :addressId',
+                ExpressionAttributeValues: {
+                    ':addressId': addressId,
+                },
+                ReturnValues: 'UPDATED_NEW',
+            };
+
+            await docClient.update(updateParams).promise();
+        }
+
         return {
             statusCode: 201,
             body: JSON.stringify({ addressId }),
         };
     } catch (error) {
+        console.error('Error processing request:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),

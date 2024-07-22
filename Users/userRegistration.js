@@ -52,7 +52,7 @@ exports.handler = async (event) => {
     if (!mobileNumber || !password || !name) {
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Missing required fields" }),
+            body: JSON.stringify({ message: "Missing required fields", statusCode: 401 }),
         };
     }
 
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
     if (!mobileRegex.test(mobileNumber)) {
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Invalid mobile number format" }),
+            body: JSON.stringify({ message: "Invalid mobile number format", statusCode: 401 }),
         };
     }
 
@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         if (mobileExists) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "Mobile number already registered" }),
+                body: JSON.stringify({ message: "Mobile number already registered", statusCode: 401 }),
             };
         }
 
@@ -80,7 +80,7 @@ exports.handler = async (event) => {
         if (nameExists) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "Name already registered" }),
+                body: JSON.stringify({ message: "Name already registered", statusCode: 401 }),
             };
         }
 
@@ -100,13 +100,13 @@ exports.handler = async (event) => {
         await docClient.put(params).promise();
         return {
             statusCode: 201,
-            body: JSON.stringify({ userId }),
+            body: JSON.stringify({ message: "User registered successfully", userId, statusCode: 201 }),
         };
     } catch (error) {
         console.error('Error adding user:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
+            body: JSON.stringify({ message: "Internal Server Error", error: error.message, statusCode: 500 }),
         };
     }
 };

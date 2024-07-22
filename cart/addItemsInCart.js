@@ -68,31 +68,50 @@ exports.handler = async (event) => {
             };
         }
 
-        // Find the appropriate unit price based on quantityUnits
-        let unitPrice = null;
-        for (let i = product.unitPrices.length - 1; i >= 0; i--) {
-            if (quantityUnits === product.unitPrices[i].qty) {
-                unitPrice = product.unitPrices[i];
-                break;
-            }
-        }
+        let unitPrice;
+        let price, mrp, savings, subtotal;
 
-        if (!unitPrice) {
+        if (product.unit.toUpperCase() === 'KG') {
+            // Find the appropriate unit price based on quantityUnits for KG
+            for (let i = product.unitPrices.length - 1; i >= 0; i--) {
+                if (quantityUnits === product.unitPrices[i].qty) {
+                    unitPrice = product.unitPrices[i];
+                    break;
+                }
+            }
+
+            if (!unitPrice) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid quantity units for KG" }),
+                };
+            }
+
+            price = unitPrice.price;
+            mrp = unitPrice.mrp;
+            savings = unitPrice.savings * quantity;
+            subtotal = price * quantity;
+
+        } else if (product.unit.toUpperCase() === 'PCS') {
+            // For PCS, we assume there's a single price for each piece
+            if (!product.price || !product.mrp) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = product.price;
+            mrp = product.mrp;
+            savings = (mrp - price) * quantity;
+            subtotal = price * quantity;
+
+        } else {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "Invalid quantity units" }),
+                body: JSON.stringify({ message: "Invalid product unit" }),
             };
         }
-
-        const price = unitPrice.price;
-        const mrp = unitPrice.mrp;
-        const savings = unitPrice.savings * quantity;
-
-        // Calculate total quantity in grams
-        const totalQuantityInGrams = quantity * quantityUnits;
-
-        // Calculate the subtotal and total savings for the quantity
-        const subtotal = price * quantity;
 
         // Prepare the item to be stored in the CartItems table
         const params = {
@@ -108,7 +127,6 @@ exports.handler = async (event) => {
                 Price: price,
                 Subtotal: subtotal,
                 Mrp: mrp
-                
             },
         };
 

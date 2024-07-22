@@ -9,7 +9,7 @@ exports.handler = async (event) => {
     if (!mobileNumber || !oldPassword || !newPassword) {
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Missing required fields" }),
+            body: JSON.stringify({ message: "Missing required fields" ,statusCode: 401}),
         };
     }
 
@@ -29,7 +29,7 @@ exports.handler = async (event) => {
         if (data.Items.length === 0) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "User not found" }),
+                body: JSON.stringify({ message: "User not found" ,statusCode: 404 }),
             };
         }
 
@@ -39,7 +39,7 @@ exports.handler = async (event) => {
         if (user.PasswordHash !== oldPasswordHash) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "Old password is incorrect" }),
+                body: JSON.stringify({ message: "Old password is incorrect", statusCode: 401}),
             };
         }
 
@@ -49,7 +49,7 @@ exports.handler = async (event) => {
         if (user.PasswordHash === newPasswordHash) {
             return {
                 statusCode: 200,
-                body: JSON.stringify({ message: "New password must be different from the old password" }),
+                body: JSON.stringify({ message: "New password must be different from the old password" ,statusCode: 401}),
             };
         }
 
@@ -68,7 +68,7 @@ exports.handler = async (event) => {
         await docClient.update(updateParams).promise();
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Password changed successfully" }),
+            body: JSON.stringify({ message: "Password changed successfully" ,statusCode: 200}),
         };
     } catch (error) {
         return {

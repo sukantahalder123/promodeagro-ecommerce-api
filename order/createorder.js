@@ -37,7 +37,7 @@ async function getAddressDetails(userId, addressId) {
     TableName: addressTableName,
     Key: marshall({ userId: userId, addressId: addressId }) // Ensure this matches your table's key schema
   };
-  
+
   try {
     const { Item: addressItem } = await dynamoDB.send(new GetItemCommand(getAddressParams));
     return addressItem ? unmarshall(addressItem) : null;
@@ -59,28 +59,45 @@ async function getProductDetails(productId, quantity, quantityUnits) {
   }
   const product = unmarshall(productItem);
 
-  // Find the appropriate unit price based on quantityUnits
-  let unitPrice = null;
-  for (let i = product.unitPrices.length - 1; i >= 0; i--) {
-    if (quantityUnits === product.unitPrices[i].qty) {
-      unitPrice = product.unitPrices[i];
-      break;
+  let price, mrp, savings, subtotal;
+
+  if (product.unit.toUpperCase() === 'PCS') {
+    // For PCS, we assume there's a single price for each piece
+    if (!product.price || !product.mrp) {
+      throw new Error("Invalid product pricing for PCS");
     }
+
+    price = product.price;
+    mrp = product.mrp;
+    savings = (mrp - price) * quantity;
+    subtotal = price * quantity;
+
+  } else if (product.unit.toUpperCase() === 'KG') {
+    // For KG, find the appropriate unit price based on quantityUnits
+    if (!product.unitPrices || !Array.isArray(product.unitPrices)) {
+      throw new Error("Invalid product unitPrices for KG");
+    }
+
+    let unitPrice = null;
+    for (let i = product.unitPrices.length - 1; i >= 0; i--) {
+      if (quantityUnits === product.unitPrices[i].qty) {
+        unitPrice = product.unitPrices[i];
+        break;
+      }
+    }
+
+    if (!unitPrice) {
+      throw new Error("Invalid quantity units for KG");
+    }
+
+    price = unitPrice.price;
+    mrp = unitPrice.mrp;
+    savings = unitPrice.savings * quantity;
+    subtotal = price * quantity;
+
+  } else {
+    throw new Error("Invalid product unit");
   }
-
-  if (!unitPrice) {
-    throw new Error("Invalid quantity units");
-  }
-
-  const price = unitPrice.price;
-  const mrp = unitPrice.mrp;
-  const savings = unitPrice.savings * quantity;
-
-  // Calculate total quantity in grams
-  const totalQuantityInGrams = quantity * quantityUnits;
-
-  // Calculate the subtotal and total savings for the quantity
-  const subtotal = price * quantity;
 
   return {
     product,
@@ -207,7 +224,7 @@ module.exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify({ message: 'Order created successfully', orderId: orderId }),
     };
-    
+
   } catch (error) {
     console.error('Error:', error.message);
     return {

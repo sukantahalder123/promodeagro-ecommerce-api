@@ -402,7 +402,7 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **Method**: GET
 
 ### URL
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products/search?query={name}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products/search?query={name}&userId={userId}`
 
 ---
 

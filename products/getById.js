@@ -29,9 +29,19 @@ module.exports.getProductById = async (event) => {
       };
     }
 
+    let product = productData.Item;
+
+    // Convert qty to grams
+    if (product.unitPrices) {
+      product.unitPrices = product.unitPrices.map(unitPrice => ({
+        ...unitPrice,
+        qty: `${unitPrice.qty} grams`
+      }));
+    }
+
     let response = {
       statusCode: 200,
-      body: JSON.stringify(productData.Item),
+      body: JSON.stringify(product),
     };
 
     if (userId) {
@@ -53,22 +63,22 @@ module.exports.getProductById = async (event) => {
         Subtotal: 0,
         Price: 0,
         Mrp: 0,
-        Quantity: 0,
-        productImage: productData.Item.image || '',
-        productName: productData.Item.name || ''
+        Quantity: '0 grams',
+        productImage: product.image || '',
+        productName: product.name || ''
       };
 
       if (cartData.Item) {
         // If product exists in cart, add cart information to response
         response.body = JSON.stringify({
-          ...productData.Item,
+          ...product,
           inCart: true,
           cartItem: cartData.Item
         });
       } else {
         // If product does not exist in cart, return basic product details with default cart item
         response.body = JSON.stringify({
-          ...productData.Item,
+          ...product,
           inCart: false,
           cartItem: defaultCartItem
         });

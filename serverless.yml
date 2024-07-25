@@ -45,6 +45,7 @@ functions:
   - ${file(deliverySlots/function.yml)}
   - ${file(offers/function.yml)}
   - ${file(reviews/function.yml)}
+  - ${file(wishlist/function.yml)}
 
 
 

@@ -1,8 +1,11 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
+const AWS = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 require('dotenv').config();
+
+const client = new AWS.DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
   const { query } = event.queryStringParameters || {};
@@ -30,8 +33,18 @@ exports.handler = async (event) => {
   };
 
   try {
-    const data = await docClient.scan(params).promise();
+    const data = await docClient.send(new ScanCommand(params));
     const products = data.Items;
+
+    // Convert qty to grams in unitPrices
+    products.forEach(product => {
+      if (product.unitPrices) {
+        product.unitPrices = product.unitPrices.map(unitPrice => ({
+          ...unitPrice,
+          qty: `${unitPrice.qty} grams`
+        }));
+      }
+    });
 
     if (userId) {
       const cartParams = {
@@ -42,25 +55,30 @@ exports.handler = async (event) => {
         }
       };
 
-      const cartData = await docClient.query(cartParams).promise();
+      const cartData = await docClient.send(new QueryCommand(cartParams));
       const cartItems = cartData.Items;
 
       products.forEach(product => {
-        const cartItem = cartItems.find(item => item.ProductId === product.id) || {
-          ProductId: product.id,
-          UserId: userId,
-          Savings: 0,
-          QuantityUnits: 0,
-          Subtotal: 0,
-          Price: 0,
-          Mrp: 0,
-          Quantity: 0,
-          productImage: product.image || '',
-          productName: product.name || ''
-        };
+        const cartItem = cartItems.find(item => item.ProductId === product.id) || null;
 
-        product.inCart = !!cartItem;
-        product.cartItem = cartItem;
+        if (cartItem) {
+          product.inCart = true;
+          product.cartItem = cartItem;
+        } else {
+          product.inCart = false;
+          product.cartItem = {
+            ProductId: product.id,
+            UserId: userId,
+            Savings: 0,
+            QuantityUnits: 0,
+            Subtotal: 0,
+            Price: 0,
+            Mrp: 0,
+            Quantity: "0 grams",
+            productImage: product.image || '',
+            productName: product.name || ''
+          };
+        }
       });
     }
 

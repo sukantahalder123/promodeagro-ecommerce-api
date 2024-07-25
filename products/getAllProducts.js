@@ -1,12 +1,10 @@
 'use strict';
 
-const AWS = require('aws-sdk');
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+require('dotenv').config();
 
-AWS.config.update({
-  // Add your configuration options here
-});
-
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 module.exports.handler = async (event) => {
   try {
@@ -14,9 +12,9 @@ module.exports.handler = async (event) => {
 
     // Fetch all products
     const getAllProductsParams = {
-      TableName: 'Products',
+      TableName: process.env.PRODUCTS_TABLE,
     };
-    const productsData = await dynamoDB.scan(getAllProductsParams).promise();
+    const productsData = await dynamoDB.send(new ScanCommand(getAllProductsParams));
 
     if (!productsData.Items || productsData.Items.length === 0) {
       return {
@@ -25,12 +23,20 @@ module.exports.handler = async (event) => {
       };
     }
 
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(productsData.Items),
-    };
+    let products = productsData.Items.map(item => unmarshall(item));
 
-    let productsWithCartInfo = productsData.Items.map(product => {
+    // Convert qty to grams
+    products = products.map(product => {
+      if (product.unitPrices) {
+        product.unitPrices = product.unitPrices.map(unitPrice => ({
+          ...unitPrice,
+          qty: `${unitPrice.qty} grams`
+        }));
+      }
+      return product;
+    });
+
+    let productsWithCartInfo = products.map(product => {
       const defaultCartItem = {
         ProductId: product.id,
         UserId: userId || 'defaultUserId', // Assign a default userId if not provided
@@ -39,7 +45,7 @@ module.exports.handler = async (event) => {
         Subtotal: 0,
         Price: 0,
         Mrp: 0,
-        Quantity: 0,
+        Quantity: '0 grams',
         productImage: product.image || '',
         productName: product.name || ''
       };
@@ -57,21 +63,21 @@ module.exports.handler = async (event) => {
         TableName: 'CartItems',
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
-          ':userId': userId,
+          ':userId': { S: userId },
         },
       };
-      const cartData = await dynamoDB.query(getCartItemsParams).promise();
+      const cartData = await dynamoDB.send(new QueryCommand(getCartItemsParams));
       const cartItemsMap = new Map();
 
       // Map cart items by ProductId for easy lookup
       if (cartData.Items) {
-        cartData.Items.forEach(item => {
+        cartData.Items.map(item => unmarshall(item)).forEach(item => {
           cartItemsMap.set(item.ProductId, item);
         });
       }
 
       // Merge cart items with products
-      productsWithCartInfo = productsData.Items.map(product => {
+      productsWithCartInfo = productsWithCartInfo.map(product => {
         const defaultCartItem = {
           ProductId: product.id,
           UserId: userId,
@@ -80,7 +86,7 @@ module.exports.handler = async (event) => {
           Subtotal: 0,
           Price: 0,
           Mrp: 0,
-          Quantity: 0,
+          Quantity: '0 grams',
           productImage: product.image || '',
           productName: product.name || ''
         };
@@ -94,9 +100,10 @@ module.exports.handler = async (event) => {
       });
     }
 
-    response.body = JSON.stringify(productsWithCartInfo);
-
-    return response;
+    return {
+      statusCode: 200,
+      body: JSON.stringify(productsWithCartInfo),
+    };
   } catch (error) {
     console.error('Error fetching products:', error);
     return {

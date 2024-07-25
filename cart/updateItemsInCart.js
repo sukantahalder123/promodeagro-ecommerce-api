@@ -71,8 +71,8 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
 
             price = unitPrice.price;
             mrp = unitPrice.mrp;
-            savings = unitPrice.savings * quantity;
-            subtotal = price * quantity;
+            savings = (unitPrice.savings * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
 
         } else if (product.unit.toUpperCase() === 'PCS') {
             // For PCS, we assume there's a single price for each piece
@@ -85,8 +85,8 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
 
             price = product.price;
             mrp = product.mrp;
-            savings = (mrp - price) * quantity;
-            subtotal = price * quantity;
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
 
         } else {
             return {
@@ -106,10 +106,10 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
             ExpressionAttributeValues: {
                 ':quantity': quantity,
                 ':quantityUnits': quantityUnits,
-                ':subtotal': subtotal,
-                ':price': price,
-                ':mrp': mrp,
-                ':savings': savings
+                ':subtotal': parseFloat(subtotal),
+                ':price': parseFloat(price),
+                ':mrp': parseFloat(mrp),
+                ':savings': parseFloat(savings)
             },
             ReturnValues: 'UPDATED_NEW'
         };

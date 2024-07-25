@@ -87,10 +87,10 @@ exports.handler = async (event) => {
                 };
             }
 
-            price = unitPrice.price;
-            mrp = unitPrice.mrp;
-            savings = unitPrice.savings * quantity;
-            subtotal = price * quantity;
+            price = parseFloat(unitPrice.price);
+            mrp = parseFloat(unitPrice.mrp);
+            savings = parseFloat((unitPrice.savings * quantity).toFixed(2));
+            subtotal = parseFloat((price * quantity).toFixed(2));
 
         } else if (product.unit.toUpperCase() === 'PCS') {
             // For PCS, we assume there's a single price for each piece
@@ -101,10 +101,10 @@ exports.handler = async (event) => {
                 };
             }
 
-            price = product.price;
-            mrp = product.mrp;
-            savings = (mrp - price) * quantity;
-            subtotal = price * quantity;
+            price = parseFloat(product.price);
+            mrp = parseFloat(product.mrp);
+            savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+            subtotal = parseFloat((price * quantity).toFixed(2));
 
         } else {
             return {

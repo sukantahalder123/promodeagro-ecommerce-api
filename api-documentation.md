@@ -2,6 +2,12 @@
 # E-commerce API DOCUMENTATION
 
 
+<br>
+<br>
+
+
+# USER
+
 ## API Endpoint: RegisterUser
 
 This endpoint is used to register user.
@@ -99,8 +105,13 @@ The request body should be a JSON object with the following fields:
 ### oldPassword: The oldPassword of the user. Requires.
 ### newPassword: The newPassword of the user. Requires.
 
+<br>
+<br>
+<br>
 
 
+# Cart
+<br>
 
 
 ## API Endpoint: addItemsCart
@@ -205,6 +216,13 @@ Retrieves all items in the user's cart.
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/getItems/{userId}`  
 
 
+<br>
+<br>
+<br>
+
+
+# Address
+<br>
 
 ## API Endpoint: Add User Address
 
@@ -358,6 +376,12 @@ Get default Address .
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getDefaultAddress/{userId}`  
 
 
+<br>
+<br>
+<br>
+
+# Products
+<br>
 
 ## API Endpoint: Get All Products
 
@@ -392,6 +416,10 @@ Get default Address .
 ### minPrice: Filter by minimum price.
 ### maxPrice: Filter by maximum price.
 ### discounts: Filter by discount ranges. Provide values like upto5, 10to15, 15to25, morethan25.
+### category: Filter Product by category
+### subcategory: Filter product by subcategory
+### ratingFilter: Filter by rating .Provide values like '5.0','4.0 & up','3.0 & up','2.0 & up'
+
 ### Example Request:  GET https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/products?minPrice=5&maxPrice=15&discounts=upto5,10to15
 This request retrieves details of the product with  prices between 5 and 15, and discounts ranging from up to 5% ,to 10% to 15%,15% to 25,morethan25.
 
@@ -413,7 +441,7 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **Method**: GET
 
 ### URL
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductByCategory?category={category}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductByCategory?category={category}&userId={userId}`
 
 ---
 
@@ -423,9 +451,11 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **Method**: GET
 
 ### URL
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductBySubCategory?subcategory={subcategory}`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductBySubCategory?subcategory={subcategory}&userId={userId}`
 
 ---
+
+
 
 
 
@@ -439,8 +469,72 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/category`
 
 ---
+<br>
+<br>
+<br>
 
 
+
+<br>
+
+# WishList
+<br>
+
+
+## API Endpoint: Add Product in WishLists
+
+### Method
+- **Method**: POST
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/addProductInWishList`
+
+### Content-Type
+- **Content-Type**: `application/json`
+
+### Request Body
+The request body should be a JSON object with the following fields:
+```json
+{
+    "userId": "string",
+    "productId": "string"
+}
+
+```
+
+
+## API Endpoint: Get User Product WishList
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getUserWishList?userId={userId}`
+
+---
+
+
+
+## API Endpoint: Remove Product From WishList
+
+### Method
+- **Method**: DELETE
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/removeProductInWishList?userId={userId}&productId={productId}`
+
+---
+
+
+
+
+
+
+<br>
+<br>
+<br>
+
+# Offers
 
 
 ## API Endpoint: Get All Offers
@@ -505,6 +599,13 @@ The request body should be a JSON object with the following fields:
 ---
 
 
+
+
+<br>
+<br>
+<br>
+
+# Order
 
 
 ## API Endpoint: Create Order
@@ -581,3 +682,6 @@ The request body should be a JSON object with the following fields:
        ### today: Get slots for the current day.
        ### tomorrow: Get slots for the next day.
        ### YYYY-MM-DD: Get slots for a specific date in the YYYY-MM-DD format.
+
+
+

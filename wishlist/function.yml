@@ -1,0 +1,22 @@
+ addProductInWishList:
+   handler:  wishlist/addProductInWishList.handler
+   events:
+     - httpApi:
+         path: /addProductInWishList
+         method: post
+
+
+ removeProductInWishList:
+   handler:  wishlist/removeProductInWishlist.handler
+   events:
+     - httpApi:
+         path: /removeProductInWishList
+         method: delete
+
+
+ getUsersInWishList:
+   handler:  wishlist/getUserProductWishList.handler
+   events:
+     - httpApi:
+         path: /getUserWishList
+         method: get

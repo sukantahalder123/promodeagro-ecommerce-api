@@ -30,7 +30,7 @@ module.exports.handler = async (event) => {
       if (product.unitPrices) {
         product.unitPrices = product.unitPrices.map(unitPrice => ({
           ...unitPrice,
-          qty: `${unitPrice.qty} grams`
+          qty: unitPrice.qty
         }));
       }
       return product;
@@ -45,7 +45,7 @@ module.exports.handler = async (event) => {
         Subtotal: 0,
         Price: 0,
         Mrp: 0,
-        Quantity: '0 grams',
+        Quantity: 0,
         productImage: product.image || '',
         productName: product.name || ''
       };
@@ -53,6 +53,7 @@ module.exports.handler = async (event) => {
       return {
         ...product,
         inCart: false,
+        inWishlist: false, // Default value for wishlist status
         cartItem: defaultCartItem,
       };
     });
@@ -76,7 +77,25 @@ module.exports.handler = async (event) => {
         });
       }
 
-      // Merge cart items with products
+      // Fetch wishlist items for the user
+      const getWishlistItemsParams = {
+        TableName: 'ProductWishLists',
+        KeyConditionExpression: 'UserId = :userId',
+        ExpressionAttributeValues: {
+          ':userId': { S: userId },
+        },
+      };
+      const wishlistData = await dynamoDB.send(new QueryCommand(getWishlistItemsParams));
+      const wishlistItemsSet = new Set();
+
+      // Map wishlist items by ProductId for easy lookup
+      if (wishlistData.Items) {
+        wishlistData.Items.map(item => unmarshall(item)).forEach(item => {
+          wishlistItemsSet.add(item.ProductId);
+        });
+      }
+
+      // Merge cart and wishlist items with products
       productsWithCartInfo = productsWithCartInfo.map(product => {
         const defaultCartItem = {
           ProductId: product.id,
@@ -86,7 +105,7 @@ module.exports.handler = async (event) => {
           Subtotal: 0,
           Price: 0,
           Mrp: 0,
-          Quantity: '0 grams',
+          Quantity: 0,
           productImage: product.image || '',
           productName: product.name || ''
         };
@@ -95,6 +114,7 @@ module.exports.handler = async (event) => {
         return {
           ...product,
           inCart: cartItemsMap.has(product.id),
+          inWishlist: wishlistItemsSet.has(product.id),
           cartItem,
         };
       });

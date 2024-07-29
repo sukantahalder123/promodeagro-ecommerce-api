@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         let unitPrice;
         let price, mrp, savings, subtotal;
 
-        if (product.unit.toUpperCase() === 'KG') {
+        if (product.unit.toUpperCase() === 'GRAMS') {
             // Find the appropriate unit price based on quantityUnits for KG
             for (let i = product.unitPrices.length - 1; i >= 0; i--) {
                 if (quantityUnits === product.unitPrices[i].qty) {

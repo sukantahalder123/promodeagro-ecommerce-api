@@ -35,7 +35,7 @@ module.exports.getProductById = async (event) => {
     if (product.unitPrices) {
       product.unitPrices = product.unitPrices.map(unitPrice => ({
         ...unitPrice,
-        qty: `${unitPrice.qty} grams`
+        qty: unitPrice.qty
       }));
     }
 
@@ -45,6 +45,20 @@ module.exports.getProductById = async (event) => {
     };
 
     if (userId) {
+      // Initialize default cart item
+      const defaultCartItem = {
+        ProductId: productId,
+        UserId: userId,
+        Savings: 0,
+        QuantityUnits: 0,
+        Subtotal: 0,
+        Price: 0,
+        Mrp: 0,
+        Quantity: 0,
+        productImage: product.image || '',
+        productName: product.name || ''
+      };
+
       // Check if the product exists in the user's cart
       const cartParams = {
         TableName: 'CartItems',
@@ -55,34 +69,25 @@ module.exports.getProductById = async (event) => {
       };
       const cartData = await dynamoDB.get(cartParams).promise();
 
-      const defaultCartItem = {
-        ProductId: productId,
-        UserId: userId,
-        Savings: 0,
-        QuantityUnits: 0,
-        Subtotal: 0,
-        Price: 0,
-        Mrp: 0,
-        Quantity: '0 grams',
-        productImage: product.image || '',
-        productName: product.name || ''
+      // Check if the product exists in the user's wishlist
+      const wishlistParams = {
+        TableName: 'ProductWishLists',
+        Key: {
+          'UserId': userId,
+          'ProductId': productId
+        }
       };
+      const wishlistData = await dynamoDB.get(wishlistParams).promise();
 
-      if (cartData.Item) {
-        // If product exists in cart, add cart information to response
-        response.body = JSON.stringify({
-          ...product,
-          inCart: true,
-          cartItem: cartData.Item
-        });
-      } else {
-        // If product does not exist in cart, return basic product details with default cart item
-        response.body = JSON.stringify({
-          ...product,
-          inCart: false,
-          cartItem: defaultCartItem
-        });
-      }
+      const inCart = cartData.Item ? true : false;
+      const inWishlist = wishlistData.Item ? true : false;
+
+      response.body = JSON.stringify({
+        ...product,
+        inCart,
+        inWishlist,
+        cartItem: inCart ? cartData.Item : defaultCartItem
+      });
     }
 
     return response;

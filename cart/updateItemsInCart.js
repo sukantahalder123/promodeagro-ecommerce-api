@@ -52,7 +52,7 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
 
         let price, mrp, savings, subtotal;
 
-        if (product.unit.toUpperCase() === 'KG') {
+        if (product.unit.toUpperCase() === 'GRAMS') {
             // Find the appropriate unit price based on quantityUnits for KG
             let unitPrice = null;
             for (let i = product.unitPrices.length - 1; i >= 0; i--) {
@@ -65,7 +65,7 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
             if (!unitPrice) {
                 return {
                     statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid quantity units for KG" }),
+                    body: JSON.stringify({ message: "Invalid quantity units for GRAMS" }),
                 };
             }
 

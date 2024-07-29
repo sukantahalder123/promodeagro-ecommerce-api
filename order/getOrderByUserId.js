@@ -24,7 +24,7 @@ module.exports.handler = async (event) => {
             }
         };
 
-        console.log(queryParams)
+        console.log(queryParams);
 
         const { Items } = await dynamoDB.send(new QueryCommand(queryParams));
 
@@ -35,14 +35,9 @@ module.exports.handler = async (event) => {
             };
         }
 
-        const orders = Items.map(item => {
-            if (item) {
-                return unmarshall(item);
-            } else {
-                console.error('Item is undefined or null:', item);
-                throw new Error('Failed to unmarshall item from DynamoDB');
-            }
-        });
+        // Convert items to objects and sort by createdAt in descending order
+        const orders = Items.map(item => unmarshall(item))
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         return {
             statusCode: 200,

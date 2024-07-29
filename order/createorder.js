@@ -1,6 +1,13 @@
 const { DynamoDBClient, GetItemCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
+const AWS = require('aws-sdk');
+
+AWS.config.update({ region: 'us-east-1' }); // Replace with your desired region
+
+const stepfunctions = new AWS.StepFunctions();
+
+const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachineCCC6EC83-qv7Q5pbK9DSj';
 
 const { v4: uuidv4 } = require('uuid');
 
@@ -217,6 +224,11 @@ module.exports.handler = async (event) => {
       TableName: orderTableName,
       Item: marshall(orderItem)
     };
+    const params = {
+      stateMachineArn: orderProcessSFArn,
+      input: JSON.stringify({ body: JSON.stringify(orderItem) }) // Wrap the input in the expected structure
+  };
+    const data = await stepfunctions.startExecution(params).promise();
 
     await dynamoDB.send(new PutItemCommand(putParams));
 

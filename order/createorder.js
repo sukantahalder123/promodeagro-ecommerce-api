@@ -3,11 +3,20 @@ const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
 
 const { v4: uuidv4 } = require('uuid');
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
+const lambda = new LambdaClient({});
 
 // Create DynamoDB client with options to remove undefined values
 const dynamoDB = new DynamoDBClient({
   // Add any specific configurations here
 });
+const getCurrentISTTime = () => {
+  const utcDate = new Date();
+  // Convert UTC to IST by adding 5 hours and 30 minutes
+  const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+  return istDate.toISOString();
+};
+
 
 const orderTableName = process.env.ORDER_TABLE;
 const userTableName = process.env.USERS_TABLE;
@@ -67,12 +76,12 @@ async function getProductDetails(productId, quantity, quantityUnits) {
       throw new Error("Invalid product pricing for PCS");
     }
 
-    price = product.price;
-    mrp = product.mrp;
-    savings = (mrp - price) * quantity;
-    subtotal = price * quantity;
+    price = parseFloat(product.price);
+    mrp = parseFloat(product.mrp);
+    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+    subtotal = parseFloat((price * quantity).toFixed(2));
 
-  } else if (product.unit.toUpperCase() === 'KG') {
+  } else if (product.unit.toUpperCase() === 'GRAMS') {
     // For KG, find the appropriate unit price based on quantityUnits
     if (!product.unitPrices || !Array.isArray(product.unitPrices)) {
       throw new Error("Invalid product unitPrices for KG");
@@ -90,10 +99,10 @@ async function getProductDetails(productId, quantity, quantityUnits) {
       throw new Error("Invalid quantity units for KG");
     }
 
-    price = unitPrice.price;
-    mrp = unitPrice.mrp;
-    savings = unitPrice.savings * quantity;
-    subtotal = price * quantity;
+    price = parseFloat(unitPrice.price);
+    mrp = parseFloat(unitPrice.mrp);
+    savings = parseFloat((unitPrice.savings * quantity).toFixed(2));
+    subtotal = parseFloat((price * quantity).toFixed(2));
 
   } else {
     throw new Error("Invalid product unit");
@@ -193,10 +202,10 @@ module.exports.handler = async (event) => {
     // Prepare order item
     const orderItem = {
       id: orderId,
-      createdAt: new Date().toISOString(),
+      createdAt: getCurrentISTTime(),
       items: orderItems,
-      totalPrice: totalPrice.toString(),
-      totalSavings: totalSavings.toString(), // Include totalSavings in the order item
+      totalPrice: totalPrice.toFixed(2), // Ensure totalPrice is formatted to 2 decimal places
+      totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
       userId: userId, // Use userId instead of customerId
       address: addressDetails, // Use the fetched address details
       paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
@@ -205,9 +214,9 @@ module.exports.handler = async (event) => {
         startTime: deliverySlotDetails.startTime,
         endTime: deliverySlotDetails.endTime
       },
-      status: "PLACED",
-      updatedAt: new Date().toISOString(),
-      _lastChangedAt: Date.now().toString(),
+      status: "Order placed",
+      updatedAt: getCurrentISTTime(),
+      _lastChangedAt: getCurrentISTTime(),
       _version: '1',
       __typename: 'Order'
     };
@@ -219,6 +228,23 @@ module.exports.handler = async (event) => {
     };
 
     await dynamoDB.send(new PutItemCommand(putParams));
+
+    const saleEvent = {
+        body: {
+
+          orderId: orderItem.id // Replace with your actual order ID
+        }
+    }; const params = {
+      FunctionName: process.env.FUNCTION_A_ARN,
+      InvocationType: "RequestResponse",
+      Payload: Buffer.from(JSON.stringify(saleEvent, null, 2)),
+    };
+
+    // Create the command and send it
+    const command = new InvokeCommand(params);
+    const response = await lambda.send(command);
+    console.log(response)
+
 
     return {
       statusCode: 200,

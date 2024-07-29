@@ -1,5 +1,11 @@
-const AWS = require('aws-sdk');
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
+'use strict';
+
+const AWS = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, ScanCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+require('dotenv').config();
+
+const client = new AWS.DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
     const { minPrice, maxPrice, discounts, userId, ratingFilter, category, subcategory } = event.queryStringParameters || {};
@@ -12,7 +18,7 @@ exports.handler = async (event) => {
 
     // Define parameters for querying the Products table
     const productsParams = {
-        TableName: 'Products',
+        TableName: process.env.PRODUCTS_TABLE,
         ProjectionExpression: 'id, price, savingsPercentage, unitPrices, image, #name, category, subcategory',
         FilterExpression: '',
         ExpressionAttributeValues: {},
@@ -87,38 +93,50 @@ exports.handler = async (event) => {
             '2.0 & up': [2, 5]
         };
 
-        const ratingRange = ratingRanges[ratingFilter.trim()];
-        if (ratingRange) {
-            reviewsParams.FilterExpression = '#rating BETWEEN :minRating AND :maxRating';
-            reviewsParams.ExpressionAttributeValues = {
-                ':minRating': ratingRange[0],
-                ':maxRating': ratingRange[1]
-            };
-            reviewsParams.ExpressionAttributeNames = {
-                '#rating': 'rating'
-            };
+        const ratingFilters = ratingFilter.split(',');
+        const filteredProductIds = new Set();
 
-            // Fetch reviews and extract product IDs
-            try {
-                const reviewsData = await dynamoDb.scan(reviewsParams).promise();
-                const reviews = reviewsData.Items;
-
-                // Collect product IDs for which ratings fall within the specified range
-                productIdsForRatingFilter = [...new Set(reviews.map(review => review.productId))];
-
-                if (filterExpression.length > 0) {
-                    filterExpression += ' AND ';
-                }
-                filterExpression += '#id IN (:productIds)';
-                expressionAttributeValues[':productIds'] = productIdsForRatingFilter;
-                productsParams.ExpressionAttributeNames['#id'] = 'id';
-            } catch (error) {
-                console.error('Error fetching reviews:', error);
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({ error: 'Failed to fetch reviews' })
+        for (const rating of ratingFilters) {
+            const ratingRange = ratingRanges[rating.trim()];
+            if (ratingRange) {
+                reviewsParams.FilterExpression = '#rating BETWEEN :minRating AND :maxRating';
+                reviewsParams.ExpressionAttributeValues = {
+                    ':minRating': ratingRange[0],
+                    ':maxRating': ratingRange[1]
                 };
+                reviewsParams.ExpressionAttributeNames = {
+                    '#rating': 'rating'
+                };
+
+                try {
+                    const reviewsData = await docClient.send(new ScanCommand(reviewsParams));
+                    const reviews = reviewsData.Items;
+
+                    for (const review of reviews) {
+                        filteredProductIds.add(review.productId);
+                    }
+                } catch (error) {
+                    console.error('Error fetching reviews:', error);
+                    return {
+                        statusCode: 500,
+                        body: JSON.stringify({ error: 'Failed to fetch reviews' })
+                    };
+                }
             }
+        }
+
+        productIdsForRatingFilter = Array.from(filteredProductIds);
+        if (productIdsForRatingFilter.length > 0) {
+            if (filterExpression.length > 0) {
+                filterExpression += ' AND ';
+            }
+
+            const idFilters = productIdsForRatingFilter.map((id, index) => `:productId${index}`).join(', ');
+            filterExpression += `#id IN (${idFilters})`;
+            productIdsForRatingFilter.forEach((id, index) => {
+                expressionAttributeValues[`:productId${index}`] = id;
+            });
+            productsParams.ExpressionAttributeNames['#id'] = 'id';
         }
     }
 
@@ -149,7 +167,7 @@ exports.handler = async (event) => {
 
     // Query Products using Scan with filters
     try {
-        const productsData = await dynamoDb.scan(productsParams).promise();
+        const productsData = await docClient.send(new ScanCommand(productsParams));
         const products = productsData.Items;
 
         // Convert qty to grams in unitPrices
@@ -157,7 +175,7 @@ exports.handler = async (event) => {
             if (product.unitPrices) {
                 product.unitPrices = product.unitPrices.map(unitPrice => ({
                     ...unitPrice,
-                    qty: `${unitPrice.qty} grams`
+                    qty: unitPrice.qty
                 }));
             }
         });
@@ -172,12 +190,26 @@ exports.handler = async (event) => {
                 }
             };
 
-            const cartData = await dynamoDb.query(cartParams).promise();
+            const cartData = await docClient.send(new QueryCommand(cartParams));
             const cartItems = cartData.Items;
 
-            // Attach cart information to products
+            // Fetch wishlist items for the user if userId is provided
+            const wishlistParams = {
+                TableName: 'ProductWishLists',
+                KeyConditionExpression: 'UserId = :userId',
+                ExpressionAttributeValues: {
+                    ':userId': userId
+                }
+            };
+
+            const wishlistData = await docClient.send(new QueryCommand(wishlistParams));
+            const wishlistItems = wishlistData.Items;
+            const wishlistItemsSet = new Set(wishlistItems.map(item => item.ProductId));
+
+            // Attach cart and wishlist information to products
             products.forEach(product => {
                 const cartItem = cartItems.find(item => item.ProductId === product.id) || null;
+                const inWishlist = wishlistItemsSet.has(product.id);
 
                 if (cartItem) {
                     product.inCart = true;
@@ -192,11 +224,30 @@ exports.handler = async (event) => {
                         Subtotal: 0,
                         Price: 0,
                         Mrp: 0,
-                        Quantity: "0 grams",
+                        Quantity: 0,
                         productImage: product.image || '',
                         productName: product.name || ''
                     };
                 }
+
+                product.inWishlist = inWishlist;
+            });
+        } else {
+            products.forEach(product => {
+                product.inCart = false;
+                product.inWishlist = false;
+                product.cartItem = {
+                    ProductId: product.id,
+                    UserId: 'defaultUserId',
+                    Savings: 0,
+                    QuantityUnits: 0,
+                    Subtotal: 0,
+                    Price: 0,
+                    Mrp: 0,
+                    Quantity: 0,
+                    productImage: product.image || '',
+                    productName: product.name || ''
+                };
             });
         }
 

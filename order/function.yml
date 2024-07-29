@@ -24,7 +24,14 @@ updateOrder:
     events:
       - httpApi:
           path: /updateOrder/{id}
-          method: put    
+          method: put
+
+updateOrderStatus:
+    handler: order/updateOrderStatus.handler
+    events:
+      - httpApi:
+          path: /updateOrderStatus
+          method: put  
 
 deleteOrderById: 
     handler: order/deleteOrderById.handler

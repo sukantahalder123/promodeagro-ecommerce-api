@@ -82,6 +82,14 @@ setDefaultAddress:
         method: post
 
 
+forgetPassword:
+  handler: Users/forgetPassword.handler
+  events:
+    - httpApi:
+        path: /forgetPassword
+        method: post
+
+
 getDefaultAddress:
   handler: Users/getDefaultAddress.handler
   events:

@@ -8,6 +8,7 @@ provider:
   region: us-east-1
   runtime: nodejs18.x
   role: arn:aws:iam::851725323791:role/ecommerce_Lambda_Role
+  versionFunctions: false
   httpApi:
    
     authorizers:
@@ -46,6 +47,8 @@ functions:
   - ${file(offers/function.yml)}
   - ${file(reviews/function.yml)}
   - ${file(wishlist/function.yml)}
+  - ${file(sales/function.yml)}
+
 
 
 
@@ -54,3 +57,4 @@ functions:
   # - ${file(webhooks/function.yml)}
 plugins:
   - serverless-offline
+

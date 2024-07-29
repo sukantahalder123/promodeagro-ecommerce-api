@@ -21,7 +21,7 @@ async function validateCategory(category, subcategory) {
         },
         FilterExpression: 'contains(Subcategories, :subcategory)'
     };
-
+    
     try {
         const data = await dynamoDB.query(params).promise();
         if (data && data.Items && data.Items.length > 0) {
@@ -87,7 +87,7 @@ exports.handler = async (event) => {
             updateFbData.savingsPercentage = savingsPercentage;
 
             // Calculate unitPrices if unit is in KG
-            if (productData.unit && productData.unit.toUpperCase() === 'KG') {
+            if (productData.unit && productData.unit.toUpperCase() === 'GRAMS') {
                 const unitPrices = await calculateUnitPrices(mrp, savings);
                 updateExpression += '#unitPrices = :unitPrices, ';
                 expressionAttributeNames['#unitPrices'] = 'unitPrices';

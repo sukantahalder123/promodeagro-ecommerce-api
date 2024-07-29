@@ -1,0 +1,25 @@
+createSales:
+  handler: sales/createSales.handler
+  events:
+    - httpApi:
+        path: /addSales
+        method: post
+
+getTopSellingProducts:
+  handler: sales/getTopSellingProducts.handler
+  events:
+    - httpApi:
+        path: /getTopSellingProducts
+        method: get
+getTopSellingCategoryProducts:
+  handler: sales/getTopSellingCategoryProducts.handler
+  events:
+    - httpApi:
+        path: /getTopSellingCategoryProducts
+        method: get
+getTopSellingSubCategoryProducts:
+  handler: sales/getTopSelngSubcategoryProducts.handler
+  events:
+    - httpApi:
+        path: /getTopSelngSubcategoryProducts
+        method: get

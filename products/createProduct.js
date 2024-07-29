@@ -160,7 +160,7 @@ async function validateCategory(category, subcategory) {
 async function calculatePrices(productData, price, savings) {
     const prices = [];
 
-    if (productData.unit.toUpperCase() === 'KG') {
+    if (productData.unit.toUpperCase() === 'GRAMS') {
         const units = [250, 500, 1000]; // Units for grams
         for (const unit of units) {
             const unitPrice = Math.round((price / 1000) * unit); // Convert price per kg to price per gram

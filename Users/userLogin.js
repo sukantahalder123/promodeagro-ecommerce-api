@@ -50,12 +50,14 @@ exports.handler = async (event) => {
             // Generate a JWT token using the generated secret key
             const token = jwt.sign({ userId: user.UserId, name: user.Name }, secretKey, { expiresIn: '1h' });
 
+
+
           
             
             // Return the token in the response
             return {
                 statusCode: 200,
-                body: JSON.stringify({ token: token, userId: user.UserId, name: user.Name ,emal:user.email||'' ,contact:user.contact||"" ,statusCode:200 }),
+                body: JSON.stringify({ token: token, userId: user.UserId, name: user.Name ,contact:user.MobileNumber,email:user.email||'',statusCode:200 }),
             };
         } else {
             return {

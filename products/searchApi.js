@@ -88,9 +88,9 @@ exports.handler = async (event) => {
     if (ratingFilter) {
         const ratingRanges = {
             '5.0': [5, 5],
-            '4.0 & up': [4, 5],
-            '3.0 & up': [3, 5],
-            '2.0 & up': [2, 5]
+            '4.0toup': [4, 5],
+            '3.0toup': [3, 5],
+            '2.0toup': [2, 5]
         };
 
         const ratingFilters = ratingFilter.split(',');
@@ -146,7 +146,7 @@ exports.handler = async (event) => {
             filterExpression += ' AND ';
         }
         filterExpression += '#category = :category';
-        expressionAttributeValues[':category'] = category;
+        expressionAttributeValues[':category'] = category.toUpperCase();
         productsParams.ExpressionAttributeNames['#category'] = 'category';
     }
 
@@ -154,9 +154,9 @@ exports.handler = async (event) => {
         if (filterExpression.length > 0) {
             filterExpression += ' AND ';
         }
-        filterExpression += '#subcategory = :subcategory';
+        filterExpression += '#subCategory = :subcategory';
         expressionAttributeValues[':subcategory'] = subcategory;
-        productsParams.ExpressionAttributeNames['#subcategory'] = 'subcategory';
+        productsParams.ExpressionAttributeNames['#subCategory'] = 'subCategory';
     }
 
     // Adding the filter expression and attribute values to the productsParams
@@ -168,6 +168,8 @@ exports.handler = async (event) => {
     // Query Products using Scan with filters
     try {
         const productsData = await docClient.send(new ScanCommand(productsParams));
+        console.log(productsParams)
+        console.log(productsData)
         const products = productsData.Items;
 
         // Convert qty to grams in unitPrices

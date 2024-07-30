@@ -81,6 +81,12 @@ setDefaultAddress:
         path: /setDefaultAddress
         method: post
 
+updateUserPersnalDetail:
+  handler: Users/updateUserPersnalDetails.handler
+  events:
+    - httpApi:
+        path: /updatePersnalDetail
+        method: put
 
 forgetPassword:
   handler: Users/forgetPassword.handler

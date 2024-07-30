@@ -9,8 +9,9 @@ exports.handler = async (event) => {
     // Check for missing fields
     if (!mobileNumber || !newPassword) {
         return {
-            statusCode: 400,
-            body: JSON.stringify({ message: "Missing required fields" }),
+            statusCode: 200,
+            body: JSON.stringify({ message: "Missing required fields"  , statusCode: 400
+        }),
         };
     }
 
@@ -18,8 +19,8 @@ exports.handler = async (event) => {
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(mobileNumber)) {
         return {
-            statusCode: 400,
-            body: JSON.stringify({ message: "Invalid mobile number format" }),
+            statusCode: 200,
+            body: JSON.stringify({ message: "Invalid mobile number format" ,  statusCode: 400        }),
         };
     }
 
@@ -43,8 +44,8 @@ exports.handler = async (event) => {
 
         if (!user) {
             return {
-                statusCode: 404,
-                body: JSON.stringify({ message: "User not found" }),
+                statusCode: 200,
+                body: JSON.stringify({ message: "User not found" , statusCode: 404}),
             };
         }
 
@@ -64,7 +65,7 @@ exports.handler = async (event) => {
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Password updated successfully" }),
+            body: JSON.stringify({ message: "Password updated successfully" ,statusCode: 200,        }),
         };
     } catch (error) {
         return {

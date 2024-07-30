@@ -492,6 +492,16 @@ This request retrieves details of the product with  prices between 5 and 15, and
 
 
 
+## API Endpoint: Get Top Selling Products
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getTopSellingProducts?userId={userId}`
+
+
+
 
 
 

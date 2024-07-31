@@ -233,11 +233,11 @@ module.exports.handler = async (event) => {
       TableName: orderTableName,
       Item: marshall(orderItem)
     };
-    const params = {
+    const SFparams = {
       stateMachineArn: orderProcessSFArn,
-      input: JSON.stringify({ body: JSON.stringify(orderItem) }) // Wrap the input in the expected structure
+      input: JSON.stringify(orderItem)
   };
-    const data = await stepfunctions.startExecution(params).promise();
+    await stepfunctions.startExecution(SFparams).promise();
 
     await dynamoDB.send(new PutItemCommand(putParams));
 

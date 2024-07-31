@@ -91,7 +91,7 @@ exports.handler = async (event) => {
             }
 
             const productDetails = unmarshall(productResponse.Item);
-            const { category, subcategory } = productDetails;
+            const { category, subCategory } = productDetails;
 
             console.log(`Product Details for ${productId}:`, productDetails); // Debug log
 
@@ -109,7 +109,7 @@ exports.handler = async (event) => {
                 SaleTimestamp: saleTimestamp,
                 orderId: orderId,
                 Category: category,
-                Subcategory: subcategory
+                Subcategory: subCategory
             };
 
             console.log(`Sale Item to be marshalled:`, saleItem); // Debug log

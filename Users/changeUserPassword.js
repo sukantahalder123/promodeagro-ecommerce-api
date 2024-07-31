@@ -70,7 +70,7 @@ exports.handler = async (event) => {
         await docClient.update(updateParams).promise();
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Password changed successfully" }),
+            body: JSON.stringify({ message: "Password changed successfully" ,statusCode: 200}),
         };
     } catch (error) {
         return {

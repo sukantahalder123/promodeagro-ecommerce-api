@@ -7,7 +7,7 @@ AWS.config.update({ region: 'us-east-1' }); // Replace with your desired region
 
 const stepfunctions = new AWS.StepFunctions();
 
-const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachineCCC6EC83-qv7Q5pbK9DSj';
+const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachine';
 
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");

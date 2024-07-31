@@ -95,15 +95,50 @@ The request body should be a JSON object with the following fields:
 
 ```json
 {
-    "mobileNumber":"string", 
+    "userId":"string", 
     "oldPassword":"string", 
     "newPassword":"string"
 }
 ```
 
-### mobileNumber: The phone number of the user. Required.
-### oldPassword: The oldPassword of the user. Requires.
+### userId : The userId the user. Required.
 ### newPassword: The newPassword of the user. Requires.
+
+
+
+
+
+## API Endpoint: Forget User Password
+
+This endpoint is used to forget users password.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/forgetPassword`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+  "mobileNumber": "string",
+  "newPassword":"string"
+}
+```
+
+### mobileNumber: The phone number of the user. Required.
+### newPassword: The Newpassword of the user. Requires.
+
+
 
 <br>
 <br>
@@ -454,6 +489,28 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getProductBySubCategory?subcategory={subcategory}&userId={userId}`
 
 ---
+
+
+
+## API Endpoint: Get Top Selling Products
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getTopSellingProducts?&subcategory={subCategory}&userId={userId}`
+
+
+
+
+## API Endpoint: Get Top Selling categories
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getTopSellingCategories`
+
 
 
 

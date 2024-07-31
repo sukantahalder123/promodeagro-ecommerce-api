@@ -15,7 +15,7 @@ getTopSellingCategoryProducts:
   handler: sales/getTopSellingCategoryProducts.handler
   events:
     - httpApi:
-        path: /getTopSellingCategoryProducts
+        path: /getTopSellingCategories
         method: get
 getTopSellingSubCategoryProducts:
   handler: sales/getTopSelngSubcategoryProducts.handler

@@ -13,6 +13,8 @@ const WISHLIST_ITEMS_TABLE_NAME = process.env.WISHLIST_ITEMS_TABLE || "ProductWi
 
 exports.handler = async (event) => {
     try {
+        const { subcategory, userId } = event.queryStringParameters || {};
+
         // Fetch all sales records
         const scanParams = {
             TableName: SALES_TABLE_NAME
@@ -49,22 +51,29 @@ exports.handler = async (event) => {
 
         let products = productsData.Items.map(item => unmarshall(item));
 
+        // Filter products by category and subcategory if provided
+     
+        if (subcategory) {
+            products = products.filter(product => product.subCategory && product.subCategory === subcategory);
+        }
+
         // Filter top-selling products with product details
         const topSellingProductDetails = topSellingProducts.map(topProduct => {
             const product = products.find(p => p.id === topProduct.productId);
-            return {
-                ...topProduct,
-                ...product,
-                inCart: false, // Default value
-                inWishlist: false // Default value
-            };
-        });
+            if (product) {
+                return {
+                    ...topProduct,
+                    ...product,
+                    inCart: false, // Default value
+                    inWishlist: false // Default value
+                };
+            }
+            return null;
+        }).filter(item => item !== null);
 
         // Fetch cart items and wishlist items if userId is provided
         let cartItemsMap = new Map();
         let wishlistItemsSet = new Set();
-
-        const userId = event.queryStringParameters && event.queryStringParameters.userId;
 
         if (userId) {
             const getCartItemsParams = {

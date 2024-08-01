@@ -105,3 +105,11 @@ getDefaultAddress:
 
 authorizer:
   handler: Users/authorizer.handler
+
+
+deleteUser:
+  handler: Users/deleteUser.handler
+  events:
+    - httpApi:
+        path: /deleteUser/{userId}
+        method: delete

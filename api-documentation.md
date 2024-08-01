@@ -140,6 +140,41 @@ The request body should be a JSON object with the following fields:
 
 
 
+## API Endpoint: update User information
+
+This endpoint is used to update User information.
+
+## Method
+
+- **Method**: PUT
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/updatePersnalDetail`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId":"string",
+    "mobileNumber":"string",
+    "email":"string",
+    "name":"name"
+}
+```
+### userId: The userId of the user. required.
+### mobileNumber: The phone number of the user. optional.
+### name: The name of the user. optional.
+### email: The email of the user. optional.
+
+
+
 <br>
 <br>
 <br>

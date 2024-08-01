@@ -108,7 +108,7 @@ exports.handler = async (event) => {
                     '#rating': 'rating'
                 };
 
-                try {
+                try {   
                     const reviewsData = await docClient.send(new ScanCommand(reviewsParams));
                     const reviews = reviewsData.Items;
 

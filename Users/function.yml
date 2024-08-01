@@ -113,3 +113,10 @@ deleteUser:
     - httpApi:
         path: /deleteUser/{userId}
         method: delete
+
+getUserDetailsById:
+  handler: Users/getPersnalDetailsByUserId.handler
+  events:
+    - httpApi:
+        path: /getPersnalDetails
+        method: get

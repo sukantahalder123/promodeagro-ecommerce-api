@@ -174,6 +174,19 @@ The request body should be a JSON object with the following fields:
 ### email: The email of the user. optional.
 
 
+## API Endpoint: Get User Persnal details
+
+Retrieves Persnal details of user.
+
+## Method
+
+- **Method**: GET
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getPersnalDetails?userId={userId}`  
+
+
 
 <br>
 <br>

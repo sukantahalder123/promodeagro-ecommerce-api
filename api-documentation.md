@@ -466,6 +466,48 @@ Get default Address .
 # Products
 <br>
 
+## API Endpoint: add product
+
+create a new product
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/product`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "name": "Organic Vegetable",
+    "mrp": 1000,
+    "savingsPercentage": 10,
+    "about": "High-quality organic vegetable sourced from hyderabad.",
+    "images": [
+        "iVBORw0KGgoAAAANSUhEUgAAA...<base64-encoded-string>"
+    ],
+    "imageType": "image/png",
+    "description": "These organic vegetable are perfect for healthy snacks and cooking.",
+    "unit": "kg",
+    "category": "FRUITS",
+    "subCategory": "VEGETABLE",
+    "availability": "in stock",
+    "brand": "Nature's Delight",
+    "currency": "USD",
+    "ratings": 4.7
+}
+
+```
+
 ## API Endpoint: Get All Products
 
 ### Method
@@ -475,6 +517,14 @@ Get default Address .
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/product`
 
 ---
+
+## API Endpoint: Get ProductStats
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/items/{productId}`
 
 
 ## API Endpoint: Get Product by productId
@@ -703,6 +753,59 @@ The request body should be a JSON object with the following fields:
 
 ---
 
+<br>
+<br>
+<br>
+
+# Inventory
+
+
+## API Endpoint: Create Inventory
+
+### Method
+- **Method**: POST
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/inventory`
+
+### Content-Type
+- **Content-Type**: `application/json`
+
+### Request Body
+The request body should be a JSON object with the following fields:
+```json
+{
+    "id": "12345",
+    "productId": "67890",
+    "availableQuantity": "100",
+    "unit": "pieces",
+    "createdAt": "2024-08-10T12:34:56.789Z",
+    "_version": 1,
+    "_lastChangedAt": 1691674496789,
+    "_deleted": false,
+    "updatedAt": "2024-08-10T12:34:56.789Z"
+}
+
+
+```
+
+## API Endpoint: Get All Inventory
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/inventory`
+
+
+
+## API Endpoint: Update Inventory status
+
+### Method
+- **Method**: PUT
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/inventory/status`
 
 
 
@@ -773,6 +876,26 @@ The request body should be a JSON object with the following fields:
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/order/{orderId}`
 
 
+### API Endpoint: Get all order
+
+### Method
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/order`
+
+
+### API Endpoint: Get order stats
+
+### Method
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/order/stats`
+
+
 
 ## API Endpoint: Get Available Delivery Slots
 
@@ -789,4 +912,31 @@ The request body should be a JSON object with the following fields:
        ### YYYY-MM-DD: Get slots for a specific date in the YYYY-MM-DD format.
 
 
+# Publish
+<br>
 
+
+## API Endpoint: publish
+
+This endpoint is used to update publish data
+
+## Method
+
+- **Method**: PUT
+
+## URL
+
+- **URL**: `https://wj7wzozdcc.execute-api.us-east-1.amazonaws.com/publish/{id}`  
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+
+
+```

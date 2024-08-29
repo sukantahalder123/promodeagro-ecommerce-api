@@ -12,6 +12,14 @@ updateProduct:
         path: /product
         method: put
 
+updateProductPriceByQuantity:
+  handler: products/updatePriceByQuantity.handler
+  events:
+    - httpApi:
+        path: /updatePriceByQty
+        method: put
+
+
 
 getAllProduct:
   handler: products/getAllProducts.handler

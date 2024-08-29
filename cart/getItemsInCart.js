@@ -64,7 +64,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({
                 items: data.Items,
                 subTotal,
-                savings: totalSavings,
+                savings: totalSavings.toFixed(2),
             }),
         };
 

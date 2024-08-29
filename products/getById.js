@@ -31,7 +31,7 @@ module.exports.getProductById = async (event) => {
 
     let product = productData.Item;
 
-    // Convert qty to grams
+    // Convert qty to grams if necessary
     if (product.unitPrices) {
       product.unitPrices = product.unitPrices.map(unitPrice => ({
         ...unitPrice,
@@ -81,6 +81,12 @@ module.exports.getProductById = async (event) => {
 
       const inCart = cartData.Item ? true : false;
       const inWishlist = wishlistData.Item ? true : false;
+
+      // Add selectedQuantityUnitPrice and selectedQuantityUnitMrp if the product is in the cart
+      if (inCart && cartData.Item.QuantityUnits) {
+        cartData.Item.selectedQuantityUnitPrice = cartData.Item.Price;
+        cartData.Item.selectedQuantityUnitMrp = cartData.Item.Mrp;
+      }
 
       response.body = JSON.stringify({
         ...product,

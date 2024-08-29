@@ -48,6 +48,10 @@ functions:
   - ${file(reviews/function.yml)}
   - ${file(wishlist/function.yml)}
   - ${file(sales/function.yml)}
+  - ${file(saveForLater/function.yml)}
+  - ${file(payment/function.yml)}
+
+
 
 
 

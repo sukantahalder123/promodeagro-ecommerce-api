@@ -5,7 +5,7 @@ require('dotenv').config();
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const lambda = new LambdaClient({});
-
+const { createPaymentLink } = require('../payment/createPaymentOrder');
 // Create DynamoDB client with options to remove undefined values
 const dynamoDB = new DynamoDBClient({
   // Add any specific configurations here
@@ -196,9 +196,24 @@ module.exports.handler = async (event) => {
       });
 
       // Delete the item from the cart after processing
-      await deleteCartItem(userId, item.productId);
+      if (paymentDetails.method === "cash") {
+
+
+        await deleteCartItem(userId, item.productId);
+      }
     }
 
+
+    if (paymentDetails.method === "cash") {
+      paymentDetails.status = "PENDING"
+    } else {
+
+      const payment = await createPaymentLink(totalPrice, "order", orderId);
+      paymentDetails.status = "PENDING"
+      paymentDetails.paymentLink = payment;
+    }
+
+    console.log(paymentDetails);
     // Prepare order item
     const orderItem = {
       id: orderId,
@@ -214,7 +229,8 @@ module.exports.handler = async (event) => {
         startTime: deliverySlotDetails.startTime,
         endTime: deliverySlotDetails.endTime
       },
-      status: "Order placed",
+      // status: "Order placed",
+      status: "PENDING",
       updatedAt: getCurrentISTTime(),
       _lastChangedAt: getCurrentISTTime(),
       _version: '1',
@@ -230,10 +246,10 @@ module.exports.handler = async (event) => {
     await dynamoDB.send(new PutItemCommand(putParams));
 
     const saleEvent = {
-        body: {
+      body: {
 
-          orderId: orderItem.id // Replace with your actual order ID
-        }
+        orderId: orderItem.id // Replace with your actual order ID
+      }
     }; const params = {
       FunctionName: process.env.FUNCTION_A_ARN,
       InvocationType: "RequestResponse",
@@ -245,17 +261,29 @@ module.exports.handler = async (event) => {
     const response = await lambda.send(command);
     console.log(response)
 
+    if (paymentDetails.paymentLink) {
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'Order created successfully', orderId: orderId }),
-    };
+      console.log("online")
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Order created successfully', statuscode:200,paymentLink: paymentDetails.paymentLink }),
+      };
+    } else {
+      console.log("cash")
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Order created successfully',statuscode:200, orderId: orderId }),
+      };
+    }
+
+
 
   } catch (error) {
     console.error('Error:', error.message);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Failed to process request', error: error.message }),
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Failed to process request',statuscode:200, error: error.message }),
     };
   }
 };

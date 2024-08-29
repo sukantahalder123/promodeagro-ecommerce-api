@@ -73,16 +73,35 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Check if the mobile number already exists
-        if (mobileNumber) {
-            const mobileExists = await checkMobileNumberExists(mobileNumber, userId);
-            if (mobileExists) {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({ message: "Mobile number already registered", statusCode: 401 }),
-                };
-            }
+        // Fetch the current user details
+        const userParams = {
+            TableName: process.env.USERS_TABLE,
+            Key: { UserId: userId }
+        };
+        const userData = await docClient.get(userParams).promise();
+        const currentUser = userData.Item;
+
+        // Ensure mobile number and email are not both empty
+        const newMobileNumber = mobileNumber !== undefined ? mobileNumber : currentUser.MobileNumber;
+        const newEmail = email !== undefined ? email : currentUser.email;
+
+        if (!newMobileNumber && !newEmail) {
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ message: "Both mobile number and email cannot be empty", statusCode: 401 }),
+            };
         }
+
+        // Check if the mobile number already exists
+        // if (mobileNumber) {
+        //     const mobileExists = await checkMobileNumberExists(mobileNumber, userId);
+        //     if (mobileExists) {
+        //         return {
+        //             statusCode: 200,
+        //             body: JSON.stringify({ message: "Mobile number already registered", statusCode: 401 }),
+        //         };
+        //     }
+        // }
 
         // Check if the name already exists
         if (name) {
@@ -100,7 +119,7 @@ exports.handler = async (event) => {
         let expressionAttributeValues = {};
         let expressionAttributeNames = {};
 
-        if (mobileNumber) {
+        if (mobileNumber !== undefined) {
             updateExpression += ' MobileNumber = :mobileNumber,';
             expressionAttributeValues[':mobileNumber'] = mobileNumber;
         }
@@ -109,7 +128,7 @@ exports.handler = async (event) => {
             expressionAttributeValues[':name'] = name;
             expressionAttributeNames['#nm'] = 'Name';
         }
-        if (email) {
+        if (email !== undefined) {
             updateExpression += ' email = :email,';
             expressionAttributeValues[':email'] = email;
         }
@@ -138,7 +157,7 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Error updating user:', error);
         return {
-            statusCode: 500,
+            statusCode: 200,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message, statusCode: 500 }),
         };
     }

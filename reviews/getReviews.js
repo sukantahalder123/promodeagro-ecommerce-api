@@ -21,16 +21,27 @@ exports.handler = async (event) => {
         const reviews = result.Items;
 
         if (reviews.length === 0) {
+            // Default response when no reviews are found
             return {
-                statusCode: 404,
-                body: JSON.stringify({ message: 'No reviews found for this product' }),
+                statusCode: 200,
+                body: JSON.stringify({
+                    reviews: [],
+                    ratingDistribution: [
+                    ],
+                    averageRating: "",
+                    statusCode: 200
+                }),
             };
         }
 
         // Calculate the distribution of ratings
         const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        let totalRating = 0;
+
         reviews.forEach(review => {
-            ratingCounts[review.rating]++;
+            const rating = parseInt(review.rating, 10);
+            ratingCounts[rating]++;
+            totalRating += rating;
         });
 
         const totalReviews = reviews.length;
@@ -39,11 +50,16 @@ exports.handler = async (event) => {
             percentage: ((ratingCounts[rating] / totalReviews) * 100).toFixed(2)
         }));
 
+        // Calculate the overall average rating
+        const averageRating = (totalRating / totalReviews).toFixed(2);
+
         return {
             statusCode: 200,
             body: JSON.stringify({
                 reviews: reviews,
-                ratingDistribution: ratingDistribution
+                ratingDistribution: ratingDistribution,
+                averageRating: averageRating,
+                statusCode: 200
             }),
         };
     } catch (error) {

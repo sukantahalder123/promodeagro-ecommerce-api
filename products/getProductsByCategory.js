@@ -3,7 +3,7 @@ const docClient = new AWS.DynamoDB.DocumentClient();
 require('dotenv').config();
 
 exports.handler = async (event) => {
-  const { category, userId } = event.queryStringParameters;
+  const { category, userId, pageSize = 10, pageNumber = 1, exclusiveStartKey } = event.queryStringParameters;
 
   if (!category) {
     return {
@@ -12,18 +12,54 @@ exports.handler = async (event) => {
     };
   }
 
-  const params = {
-    TableName: process.env.PRODUCTS_TABLE,
-    IndexName: 'category-index', // Ensure an index on the 'Category' attribute exists
-    KeyConditionExpression: 'category = :category',
-    ExpressionAttributeValues: {
-      ':category': category.toUpperCase(),
-    },
-  };
+  // Decode the ExclusiveStartKey
+  const decodedExclusiveStartKey = exclusiveStartKey 
+    ? JSON.parse(Buffer.from(decodeURIComponent(exclusiveStartKey), 'base64').toString('utf8'))
+    : undefined;
 
   try {
+
+    console.log(category.toLowerCase())
+    // Fetch total item count for the category
+    const countParams = {
+      TableName: process.env.PRODUCTS_TABLE,
+      IndexName: 'category-index',
+      KeyConditionExpression: 'category = :category',
+      ExpressionAttributeValues: {
+        ':category': category.toLowerCase(),
+      },
+      Select: 'COUNT',
+    };
+    const countData = await docClient.query(countParams).promise();
+    const totalItems = countData.Count;
+    const totalPages = Math.ceil(totalItems / parseInt(pageSize));
+
+    // Fetch paginated products
+    const params = {
+      TableName: process.env.PRODUCTS_TABLE,
+      IndexName: 'category-index', // Ensure an index on the 'Category' attribute exists
+      KeyConditionExpression: 'category = :category',
+      ExpressionAttributeValues: {
+        ':category': category.toLowerCase(),
+      },
+      Limit: parseInt(pageSize),
+      ExclusiveStartKey: decodedExclusiveStartKey
+    };
+
+
+    const totalProductsparam = {
+      TableName: process.env.PRODUCTS_TABLE,
+      IndexName: 'category-index', // Ensure an index on the 'Category' attribute exists
+      KeyConditionExpression: 'category = :category',
+      ExpressionAttributeValues: {
+        ':category': category.toLowerCase(),
+      },
+      };
+
     const data = await docClient.query(params).promise();
-    const products = data.Items;
+    const TotalProducts = await docClient.query(totalProductsparam).promise();
+
+    const products = data.Items || [];
 
     // Convert qty to grams in unitPrices
     products.forEach(product => {
@@ -67,7 +103,11 @@ exports.handler = async (event) => {
 
         if (cartItem) {
           product.inCart = true;
-          product.cartItem = cartItem;
+          product.cartItem = {
+            ...cartItem,
+            selectedQuantityUnit: cartItem.QuantityUnits,
+            selectedQuantityMrp: cartItem.Mrp,
+          };
         } else {
           product.inCart = false;
           product.cartItem = {
@@ -105,9 +145,28 @@ exports.handler = async (event) => {
       });
     }
 
+    // Encode the LastEvaluatedKey
+    const encodedLastEvaluatedKey = data.LastEvaluatedKey 
+      ? encodeURIComponent(Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64'))
+      : null;
+
+    // Prepare the response
+    const response = {
+      products: products,
+      pagination: {
+        currentPage: parseInt(pageNumber),
+        pageSize: parseInt(pageSize),
+        totalPages: totalPages,
+        nextPage: encodedLastEvaluatedKey ? parseInt(pageNumber) + 1 : null,
+        lastEvaluatedKey: encodedLastEvaluatedKey,
+        // currentTotalProducts:products.length,
+        TotalProducts: TotalProducts.Items.length
+      },
+    };
+
     return {
       statusCode: 200,
-      body: JSON.stringify(products),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error fetching products:', error);

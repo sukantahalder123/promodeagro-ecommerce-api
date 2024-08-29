@@ -1,0 +1,6 @@
+addProductSaveForLater:
+  handler: saveForLater/addProductSaveForLater.handler
+  events:
+    - httpApi:
+        path: /SaveForLater
+        method: post

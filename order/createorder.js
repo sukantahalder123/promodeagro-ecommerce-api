@@ -34,7 +34,14 @@ const deliverySlotTableName = process.env.DELIVERY_SLOT_TABLE; // Add the delive
 
 // Generate a random 5-digit number
 function generateRandomOrderId() {
-  return Math.floor(10000 + Math.random() * 90000);
+  const part1 = a();
+	const part2 = a();
+	const s1 = BigInt(`0x${part1}`).toString().slice(0, 7);
+	const s2 = BigInt(`0x${part2}`).toString().slice(0, 7);
+	return `401-${s1}-${s2}`;}
+
+function a() {
+	return crypto.randomBytes(10).toString("hex");
 }
 
 // Function to fetch user details by userId
@@ -227,6 +234,8 @@ module.exports.handler = async (event) => {
       createdAt: getCurrentISTTime(),
       items: orderItems,
       totalPrice: totalPrice.toFixed(2), // Ensure totalPrice is formatted to 2 decimal places
+      tax: 0,
+      deliveryCharges: 0,
       totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
       userId: userId, // Use userId instead of customerId
       address: addressDetails, // Use the fetched address details
@@ -237,7 +246,6 @@ module.exports.handler = async (event) => {
         endTime: deliverySlotDetails.endTime
       },
       // status: "Order placed",
-      status: "PENDING",
       updatedAt: getCurrentISTTime(),
       _lastChangedAt: getCurrentISTTime(),
       _version: '1',
@@ -247,7 +255,9 @@ module.exports.handler = async (event) => {
     // Save order item to DynamoDB using PutItemCommand
     const putParams = {
       TableName: orderTableName,
-      Item: marshall(orderItem)
+      Item: marshall({
+        id: orderId
+      })
     };
     const SFparams = {
       stateMachineArn: orderProcessSFArn,

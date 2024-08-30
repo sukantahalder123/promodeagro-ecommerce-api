@@ -1,5 +1,3 @@
-'use strict';
-
 const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 require('dotenv').config();
@@ -9,12 +7,41 @@ const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 module.exports.handler = async (event) => {
   try {
     const userId = event.queryStringParameters && event.queryStringParameters.userId;
+    const pageNumber = parseInt(event.queryStringParameters.pageNumber) || 1;
+    const pageSize = parseInt(event.queryStringParameters.pageSize) || 10;
+    const exclusiveStartKeyParam = event.queryStringParameters.exclusiveStartKey;
+    const exclusiveStartKey = exclusiveStartKeyParam 
+      ? JSON.parse(Buffer.from(decodeURIComponent(exclusiveStartKeyParam), 'base64').toString('utf8'))
+      : undefined;
 
-    // Fetch all products
+    console.log("Exclusive Start Key:", JSON.stringify(exclusiveStartKey, null, 2));
+
+    // Fetch total item count
+    const countParams = {
+      TableName: process.env.PRODUCTS_TABLE,
+      Select: "COUNT",
+    };
+    const countData = await dynamoDB.send(new ScanCommand(countParams));
+    const totalItems = countData.Count;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    // Fetch paginated products
     const getAllProductsParams = {
       TableName: process.env.PRODUCTS_TABLE,
+      Limit: pageSize,
+      ExclusiveStartKey: exclusiveStartKey,
     };
+
+
+
+    const totalFilteredProducts = {
+      TableName: process.env.PRODUCTS_TABLE,
+  
+  };
     const productsData = await dynamoDB.send(new ScanCommand(getAllProductsParams));
+    const TotalProducts = await dynamoDB.send(new ScanCommand(totalFilteredProducts));
+
+
 
     if (!productsData.Items || productsData.Items.length === 0) {
       return {
@@ -41,7 +68,7 @@ module.exports.handler = async (event) => {
         ProductId: product.id,
         UserId: userId || 'defaultUserId', // Assign a default userId if not provided
         Savings: 0,
-        QuantityUnits: 0,
+        QuantityUnits: 250, // Default to grams (250g)
         Subtotal: 0,
         Price: 0,
         Mrp: 0,
@@ -101,7 +128,7 @@ module.exports.handler = async (event) => {
           ProductId: product.id,
           UserId: userId,
           Savings: 0,
-          QuantityUnits: 0,
+          QuantityUnits: 250,
           Subtotal: 0,
           Price: 0,
           Mrp: 0,
@@ -111,6 +138,16 @@ module.exports.handler = async (event) => {
         };
 
         const cartItem = cartItemsMap.get(product.id) || defaultCartItem;
+        console.log(cartItem)
+        // Only add selectedQuantityUnit if the item is in the cart and is measured in grams
+        if (cartItemsMap.has(product.id) && cartItem.QuantityUnits) {
+          cartItem.selectedQuantityUnitprice = cartItem.Price;
+          cartItem.selectedQuantityUnitMrp = cartItem.Mrp;
+
+        } else {
+          delete cartItem.selectedQuantityUnit;
+        }
+
         return {
           ...product,
           inCart: cartItemsMap.has(product.id),
@@ -120,9 +157,30 @@ module.exports.handler = async (event) => {
       });
     }
 
+    // Encode the LastEvaluatedKey for pagination
+    const encodedLastEvaluatedKey = productsData.LastEvaluatedKey 
+      ? encodeURIComponent(Buffer.from(JSON.stringify(productsData.LastEvaluatedKey)).toString('base64'))
+      : null;
+
+    // Prepare the pagination response
+    const response = {
+      products: productsWithCartInfo,
+      pagination: {
+        currentPage: pageNumber,
+        pageSize: pageSize,
+        totalPages: totalPages,
+        nextPage: encodedLastEvaluatedKey ? pageNumber + 1 : null,
+        lastEvaluatedKey: encodedLastEvaluatedKey,
+        // currentTotalProducts:products.length,
+        TotalProducts: TotalProducts.Items.length
+      },
+    };
+
+    // console.log("Pagination Response:", JSON.stringify(response, null, 2));
+
     return {
       statusCode: 200,
-      body: JSON.stringify(productsWithCartInfo),
+      body: JSON.stringify(response), // Return the array of products with pagination info
     };
   } catch (error) {
     console.error('Error fetching products:', error);

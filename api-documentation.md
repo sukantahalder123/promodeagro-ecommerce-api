@@ -140,6 +140,54 @@ The request body should be a JSON object with the following fields:
 
 
 
+## API Endpoint: update User information
+
+This endpoint is used to update User information.
+
+## Method
+
+- **Method**: PUT
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/updatePersnalDetail`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId":"string",
+    "mobileNumber":"string",
+    "email":"string",
+    "name":"name"
+}
+```
+### userId: The userId of the user. required.
+### mobileNumber: The phone number of the user. optional.
+### name: The name of the user. optional.
+### email: The email of the user. optional.
+
+
+## API Endpoint: Get User Persnal details
+
+Retrieves Persnal details of user.
+
+## Method
+
+- **Method**: GET
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getPersnalDetails?userId={userId}`  
+
+
+
 <br>
 <br>
 <br>
@@ -501,7 +549,27 @@ This request retrieves details of the product with  prices between 5 and 15, and
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/getTopSellingProducts?&subcategory={subCategory}&userId={userId}`
 
 
+## API Endpoint: Update Price By Grams
 
+### Method
+- **Method**: PUT
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/updatePriceByQty`
+
+### Content-Type
+- **Content-Type**: `application/json`
+
+### Request Body
+The request body should be a JSON object with the following fields:
+```json
+{
+    
+    "productId": "string",
+    "grams":int
+}
+
+```
 
 ## API Endpoint: Get Top Selling categories
 
@@ -545,6 +613,27 @@ This request retrieves details of the product with  prices between 5 and 15, and
 
 ### URL
 - **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/addProductInWishList`
+
+### Content-Type
+- **Content-Type**: `application/json`
+
+### Request Body
+The request body should be a JSON object with the following fields:
+```json
+{
+    "userId": "string",
+    "productId": "string"
+}
+
+```
+
+## API Endpoint: Add CartItem in WishLists Or Save For Later
+
+### Method
+- **Method**: POST
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/SaveForLater`
 
 ### Content-Type
 - **Content-Type**: `application/json`

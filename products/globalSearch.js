@@ -36,13 +36,20 @@ exports.handler = async (event) => {
     const data = await docClient.send(new ScanCommand(params));
     const products = data.Items;
 
-    // Convert qty to grams in unitPrices
+    // Convert qty to grams in unitPrices and add selectedQuantityUnitPrice and mrp
     products.forEach(product => {
-      if (product.unitPrices) {
+      if (product.unitPrices && product.unitPrices.length > 0) {
         product.unitPrices = product.unitPrices.map(unitPrice => ({
           ...unitPrice,
           qty: unitPrice.qty
         }));
+
+        // Assume first unitPrice as the default selected price
+        product.selectedQuantityUnitPrice = product.unitPrices[0].price || 0;
+        product.mrp = product.unitPrices[0].mrp || 0;
+      } else {
+        product.selectedQuantityUnitPrice = 0;
+        product.mrp = 0;
       }
     });
 
@@ -78,7 +85,11 @@ exports.handler = async (event) => {
 
         if (cartItem) {
           product.inCart = true;
-          product.cartItem = cartItem;
+          product.cartItem = {
+            ...cartItem,
+            selectedQuantityUnit: cartItem.QuantityUnits,
+            selectedQuantityMrp: cartItem.Mrp,
+          };
         } else {
           product.inCart = false;
           product.cartItem = {
@@ -88,10 +99,10 @@ exports.handler = async (event) => {
             QuantityUnits: 0,
             Subtotal: 0,
             Price: 0,
-            Mrp: 0,
+            Mrp: product.mrp,
             Quantity: 0,
             productImage: product.image || '',
-            productName: product.name || ''
+            productName: product.name || '',
           };
         }
 
@@ -108,10 +119,10 @@ exports.handler = async (event) => {
           QuantityUnits: 0,
           Subtotal: 0,
           Price: 0,
-          Mrp: 0,
+          Mrp: product.mrp,
           Quantity: 0,
           productImage: product.image || '',
-          productName: product.name || ''
+          productName: product.name || '',
         };
       });
     }

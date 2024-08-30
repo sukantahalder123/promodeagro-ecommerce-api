@@ -1,3 +1,17 @@
- verifyPayment:
-   handler:  payment/checkPaymentStatus.verifyPaymentDetails
+createPaymentOrder:
+  handler: payment/createPaymentOrder.handler
+  events:
+    - httpApi:
+        path: /createRazorPayPaymentOrder
+        method: post
 
+verifyPayment:
+  handler: payment/checkPaymentStatus.verifyPaymentDetails
+
+
+razorpayWebhook:
+   handler:  payment/razorpayWebhook.handler
+   events:
+     - httpApi:
+         path: /razorpayWebhook
+         method: POST

@@ -125,6 +125,8 @@ exports.handler = async (event) => {
                 QuantityUnits: quantityUnits, // Store the quantity units (e.g., 500 grams)
                 Savings: savings,
                 Price: price,
+                category:product.category,
+                subcategory:product.subcategory,
                 Subtotal: subtotal,
                 Mrp: mrp
             },

@@ -23,8 +23,8 @@ exports.handler = async (event) => {
             return acc;
         }, {});
 
-        // Step 3: Format the result to get list of subcategories
-        const topSellingSubcategories = Object.keys(subcategoryCounts);
+        // Step 3: Format the result to get list of subcategories and prepend "ALL"
+        const topSellingSubcategories = ['ALL', ...Object.keys(subcategoryCounts)];
 
         return {
             statusCode: 200,

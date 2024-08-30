@@ -13,8 +13,10 @@
     "pg": "^8.11.4",
     "razorpay": "^2.9.4",
     "send": "^0.18.0",
-    "serverless-offline": "^13.3.3",
     "sharp": "^0.33.4",
     "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "serverless-offline": "^14.3.1"
   }
 }

@@ -1,5 +1,6 @@
 const { DynamoDBClient, GetItemCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
+const crypto = require('crypto')
 require('dotenv').config();
 const AWS = require('aws-sdk');
 
@@ -7,7 +8,7 @@ AWS.config.update({ region: 'us-east-1' }); // Replace with your desired region
 
 const stepfunctions = new AWS.StepFunctions();
 
-const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachine';
+const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachine-prod';
 
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
@@ -27,11 +28,10 @@ const getCurrentISTTime = () => {
 
 const orderTableName = process.env.ORDER_TABLE;
 const userTableName = process.env.USERS_TABLE;
-const productTableName = process.env.PRODUCT_TABLE;
+const productTableName = process.env.PRODUCTS_TABLE;
 const addressTableName = process.env.ADDRESS_TABLE; // Add the address table name
 const cartTableName = process.env.CART_TABLE; // Add the cart table name
 const deliverySlotTableName = process.env.DELIVERY_SLOT_TABLE; // Add the delivery slot table name
-
 // Generate a random 5-digit number
 function generateRandomOrderId() {
   const part1 = a();
@@ -228,12 +228,19 @@ module.exports.handler = async (event) => {
     }
 
     console.log(paymentDetails);
-    // Prepare order item
+    console.log("USER DETAILS : ", userDetails);
+    const subTotal = orderItems.reduce((acc, item) => {
+      return acc + item.subtotal
+    }, 0)
     const orderItem = {
       id: orderId,
       createdAt: getCurrentISTTime(),
       items: orderItems,
-      totalPrice: totalPrice.toFixed(2), // Ensure totalPrice is formatted to 2 decimal places
+      totalPrice: totalPrice.toFixed(2),
+      subTotal: subTotal,
+      customerId : userId,
+      customerName : userDetails.Name,
+      customerNumber : userDetails.MobileNumber,
       tax: 0,
       deliveryCharges: 0,
       totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
@@ -255,16 +262,16 @@ module.exports.handler = async (event) => {
     // Save order item to DynamoDB using PutItemCommand
     const putParams = {
       TableName: orderTableName,
-      Item: marshall({
-        id: orderId
-      })
+      Item: marshall(orderItem)
     };
     const SFparams = {
       stateMachineArn: orderProcessSFArn,
-      input: JSON.stringify(orderItem)
+      input: JSON.stringify({
+        id: orderId
+      })
   };
-    await stepfunctions.startExecution(SFparams).promise();
-
+    const  res = await stepfunctions.startExecution(SFparams).promise();
+    console.log(res);
     await dynamoDB.send(new PutItemCommand(putParams));
 
     const saleEvent = {

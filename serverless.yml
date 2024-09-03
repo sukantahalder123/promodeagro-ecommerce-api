@@ -61,4 +61,24 @@ functions:
   # - ${file(webhooks/function.yml)}
 plugins:
   - serverless-offline
+#   - serverless-esbuild
 
+# custom:
+#   esbuild:
+#     bundle: true
+#     minify: false
+#     sourcemap: true
+#     exclude: []
+#     format: 'cjs'  # This is crucial for ESM support
+#     concurrency: 10
+#     zipConcurrency: 10
+#     define:
+#       'require.resolve': undefined
+#     platform: 'node'
+#     external:
+#       - 'aws-sdk'
+    
+# package:
+#   individually: true
+
+# useDotenv: true

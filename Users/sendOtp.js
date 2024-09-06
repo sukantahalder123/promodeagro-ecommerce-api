@@ -1,13 +1,14 @@
+require("dotenv").config();
 const axios = require("axios");
 const { randomInt } = require("node:crypto");
 
 async function sendOtp(otp, number) {
 	const url =
 		"https://restapi.smscountry.com/v0.1/Accounts/" +
-		"elXywroIYOf0MrQHA3as" +
+		process.env.SMS_AUTH +
 		"/SMSes/";
 	const header = Buffer.from(
-		"elXywroIYOf0MrQHA3as:SrptLYo7GdknJeQ1bFjJl4JHSGnhactnaDESDc4H",
+		`${process.env.SMS_AUTH}:${SMS_AUTH_TOKEN}`,
 		"utf-8"
 	).toString("base64");
 	await axios

@@ -82,3 +82,7 @@ plugins:
 #   individually: true
 
 # useDotenv: true
+
+custom:
+  serverless-offline:
+    httpPort: 4000

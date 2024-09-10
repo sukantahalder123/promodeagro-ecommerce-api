@@ -48,7 +48,7 @@ exports.handler = async (event) => {
 		// Check if user exists and passwords match
 		if (user) {
 			const otp = generateOtp();
-				 sendOtp(otp, mobileNumber);
+			await sendOtp(otp, mobileNumber);
 			const params = {
 				TableName: process.env.USERS_TABLE,
 				Key: { UserId: user.UserId }, // Key to identify the item to update

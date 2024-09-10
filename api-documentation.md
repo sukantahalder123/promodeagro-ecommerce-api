@@ -30,15 +30,41 @@ The request body should be a JSON object with the following fields:
 
 ```json
 {
-  "name": "string",
-  "mobileNumber": "string",
-  "password":"string"
+  "mobileNumber": "string"
 }
 ```
 
-### name: The name of the user. Required. 
 ### mobileNumber: The phone number of the user. Required.
-### password: The password of the user. Requires.
+
+
+
+## API Endpoint: Validate otp  RegisterUser
+
+This endpoint is used to validate register user.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/register/validate-otp`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+  "mobileNumber": "string",
+  "otp":"string"
+}
+```
+
 
 
 
@@ -65,12 +91,39 @@ The request body should be a JSON object with the following fields:
 ```json
 {
   "mobileNumber": "string",
-  "password":"string"
 }
 ```
 
 ### mobileNumber: The phone number of the user. Required.
-### password: The password of the user. Requires.
+
+
+## API Endpoint: Validate otp  Login User
+
+This endpoint is used to validate Login user.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/login/validate-otp`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+  "mobileNumber": "string",
+  "otp":"string"
+}
+```
+
 
 
 ## API Endpoint: Change User Password

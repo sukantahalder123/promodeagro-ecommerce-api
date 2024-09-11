@@ -26,21 +26,8 @@ getAllUsersEmail:
         path: /getAllUsersEmail
         method: get
 
-register:
-  handler: Users/register.handler
-  events:
-    - httpApi:
-        path: /register
-        method: post
-
-validate-register:
-  handler: Users/validate-registration.handler
-  events:
-    - httpApi:
-        path: /register/validate-otp
-        method: post
-validate-login:
-  handler: Users/validate-login.handler
+validate-otp:
+  handler: Users/validate-otp.handler
   events:
     - httpApi:
         path: /login/validate-otp

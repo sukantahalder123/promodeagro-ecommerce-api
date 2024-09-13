@@ -12,22 +12,27 @@ async function sendOtp(otp, number) {
 		`${sms_auth}:${sms_auth_token}`,
 		"utf-8"
 	).toString("base64");
-	const res = await axios.post(
-		url,
-		{
-			Text: `${otp} is your OTP to login to Promode Agro Application. Team Promode Agro Farms.`,
-			Number: number,
-			SenderId: "PROMAG",
-			Tool: "API",
-		},
-		{
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: "Basic " + header,
+	try {
+		const res = await axios.post(
+			url,
+			{
+				Text: `${otp} is your OTP to login to Promode Agro Application. Team Promode Agro Farms.`,
+				Number: number,
+				SenderId: "PROMAG",
+				Tool: "API",
 			},
-		}
-	);
-	console.log(res);
+			{
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					Authorization: "Basic " + header,
+				},
+			}
+		);
+		console.log(res);
+	} catch (error) {
+		throw error;
+	}
 }
 
 function generateOtp() {

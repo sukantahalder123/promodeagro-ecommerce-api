@@ -1,10 +1,12 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 
+require('dotenv').config();
+
 // Function to fetch product details from DynamoDB
 async function getProductDetails(productId) {
     const params = {
-        TableName: 'Products',
+        TableName: process.env.PRODUCTS_TABLE,
         Key: {
             id: productId,
         },
@@ -125,8 +127,8 @@ exports.handler = async (event) => {
                 QuantityUnits: quantityUnits, // Store the quantity units (e.g., 500 grams)
                 Savings: savings,
                 Price: price,
-                category:product.category,
-                subcategory:product.subcategory,
+                category: product.category,
+                subcategory: product.subcategory,
                 Subtotal: subtotal,
                 Mrp: mrp
             },

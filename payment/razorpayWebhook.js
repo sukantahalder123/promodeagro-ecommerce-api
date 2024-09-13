@@ -1,6 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const { DynamoDBClient, UpdateItemCommand,GetItemCommand} = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, UpdateItemCommand,GetItemCommand,DeleteItemCommand} = require('@aws-sdk/client-dynamodb');
 const { marshall , unmarshall} = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
 

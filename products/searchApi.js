@@ -563,7 +563,8 @@ exports.handler = async (event) => {
                         Mrp: 0,
                         Quantity: 0,
                         productImage: product.image || '',
-                        productName: product.name || ''
+                        productName: product.name || '',
+                        availability: product.availability || ''
                     };
                 }
 
@@ -583,7 +584,9 @@ exports.handler = async (event) => {
                     Mrp: 0,
                     Quantity: 0,
                     productImage: product.image || '',
-                    productName: product.name || ''
+                    productName: product.name || '',
+                    availability: product.availability || ''
+
                 };
             });
         }

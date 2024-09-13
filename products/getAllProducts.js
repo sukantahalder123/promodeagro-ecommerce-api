@@ -38,7 +38,11 @@ module.exports.handler = async (event) => {
       TableName: process.env.PRODUCTS_TABLE,
   
   };
+
+  console.log(getAllProductsParams)
     const productsData = await dynamoDB.send(new ScanCommand(getAllProductsParams));
+
+    console.log(productsData)
     const TotalProducts = await dynamoDB.send(new ScanCommand(totalFilteredProducts));
 
 

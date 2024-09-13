@@ -8,9 +8,14 @@ async function sendOtp(otp, number) {
 		process.env.SMS_AUTH +
 		"/SMSes/";
 	const header = Buffer.from(
-		`${process.env.SMS_AUTH}:${SMS_AUTH_TOKEN}`,
+		`${process.env.SMS_AUTH}:${process.env.SMS_AUTH_TOKEN}`,
 		"utf-8"
 	).toString("base64");
+
+
+	console.log(process.env.SMS_AUTH)
+	console.log(process.env.SMS_AUTH_TOKEN)
+
 	await axios
 		.post(
 			url,

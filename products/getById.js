@@ -1,6 +1,7 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+require('dotenv').config();
 
 AWS.config.update({
   // Add your configuration options here
@@ -15,7 +16,7 @@ module.exports.getProductById = async (event) => {
 
     // Fetch product details
     const getProductParams = {
-      TableName: 'Products',
+      TableName: process.env.PRODUCTS_TABLE,
       Key: {
         'id': productId
       }

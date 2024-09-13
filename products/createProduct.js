@@ -212,7 +212,7 @@ module.exports.handler = async (event) => {
             }
         }
 
-        const tableName = 'Products';
+        const tableName = process.env.PRODUCTS_TABLE;
 
         const uploadPromises = productData.images.map(async (image) => {
             const s3params = {

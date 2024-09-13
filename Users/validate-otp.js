@@ -75,7 +75,7 @@ exports.handler = async (event) => {
 			return {
 				statusCode: 401,
 				body: JSON.stringify({
-					message: "Invalid mobile number or password",
+					message: "Invalid mobile number or otp",
 					statusCode: 401,
 				}),
 			};

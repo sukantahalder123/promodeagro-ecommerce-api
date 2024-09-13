@@ -2,25 +2,22 @@ require("dotenv").config();
 const axios = require("axios");
 const { randomInt } = require("node:crypto");
 
+const sms_auth = process.env.SMS_AUTH;
+const sms_auth_token = process.env.SMS_AUTH_TOKEN;
+
 async function sendOtp(otp, number) {
 	const url =
-		"https://restapi.smscountry.com/v0.1/Accounts/" +
-		process.env.SMS_AUTH +
-		"/SMSes/";
+		"https://restapi.smscountry.com/v0.1/Accounts/" + sms_auth + "/SMSes/";
 	const header = Buffer.from(
-		`${process.env.SMS_AUTH}:${process.env.SMS_AUTH_TOKEN}`,
+
+		`${sms_auth}:${sms_auth_token}`,
 		"utf-8"
 	).toString("base64");
-
-
-	console.log(process.env.SMS_AUTH)
-	console.log(process.env.SMS_AUTH_TOKEN)
-
-	await axios
-		.post(
+	try {
+		const res = await axios.post(
 			url,
 			{
-				Text: `${otp} is your otp to login into Promode Agro Application. Team Promo Agro Farms`,
+				Text: `${otp} is your OTP to login to Promode Agro Application. Team Promode Agro Farms.`,
 				Number: number,
 				SenderId: "PROMAG",
 				Tool: "API",
@@ -28,12 +25,15 @@ async function sendOtp(otp, number) {
 			{
 				headers: {
 					"Content-Type": "application/json",
+					Accept: "application/json",
 					Authorization: "Basic " + header,
 				},
 			}
-		)
-		.then((data) => console.log(data))
-		.catch((err) => console.log(err));
+		);
+		console.log(res);
+	} catch (error) {
+		throw error;
+	}
 }
 
 function generateOtp() {

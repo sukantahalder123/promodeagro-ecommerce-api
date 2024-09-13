@@ -8,36 +8,6 @@
 
 # USER
 
-## API Endpoint: RegisterUser
-
-This endpoint is used to register user.
-
-## Method
-
-- **Method**: POST
-
-## URL
-
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/register`
-
-## Content-Type
-
-- **Content-Type**: `application/json`
-
-## Request Body
-
-The request body should be a JSON object with the following fields:
-
-```json
-{
-  "mobileNumber": "string"
-}
-```
-
-### mobileNumber: The phone number of the user. Required.
-
-
-
 ## API Endpoint: Validate otp  RegisterUser
 
 This endpoint is used to validate register user.
@@ -48,7 +18,7 @@ This endpoint is used to validate register user.
 
 ## URL
 
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/register/validate-otp`
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/login/validate-otp`
 
 ## Content-Type
 
@@ -95,35 +65,6 @@ The request body should be a JSON object with the following fields:
 ```
 
 ### mobileNumber: The phone number of the user. Required.
-
-
-## API Endpoint: Validate otp  Login User
-
-This endpoint is used to validate Login user.
-
-## Method
-
-- **Method**: POST
-
-## URL
-
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/login/validate-otp`
-
-## Content-Type
-
-- **Content-Type**: `application/json`
-
-## Request Body
-
-The request body should be a JSON object with the following fields:
-
-```json
-{
-  "mobileNumber": "string",
-  "otp":"string"
-}
-```
-
 
 
 ## API Endpoint: Change User Password

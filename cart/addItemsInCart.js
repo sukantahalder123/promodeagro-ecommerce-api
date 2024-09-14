@@ -1,5 +1,8 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 require('dotenv').config();
 
@@ -72,12 +75,24 @@ exports.handler = async (event) => {
 
         let unitPrice;
         let price, mrp, savings, subtotal;
+        const InventoryParams = {
+            TableName: process.env.INVENTORY_TABLE,
+            IndexName: "productIdIndex", // Replace with your actual GSI name
+            KeyConditionExpression: "productId = :productId",
+            ExpressionAttributeValues: {
+                ":productId": { S: productId },
+            },
+        };
+
+
+        const inventoryData = await dynamoDB.send(new QueryCommand(InventoryParams));
+        const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
 
         if (product.unit.toUpperCase() === 'GRAMS') {
             // Find the appropriate unit price based on quantityUnits for KG
-            for (let i = product.unitPrices.length - 1; i >= 0; i--) {
-                if (quantityUnits === product.unitPrices[i].qty) {
-                    unitPrice = product.unitPrices[i];
+            for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
+                if (quantityUnits === inventoryItem.unitPrices[i].qty) {
+                    unitPrice = inventoryItem.unitPrices[i];
                     break;
                 }
             }
@@ -94,17 +109,17 @@ exports.handler = async (event) => {
             savings = parseFloat((unitPrice.savings * quantity).toFixed(2));
             subtotal = parseFloat((price * quantity).toFixed(2));
 
-        } else if (product.unit.toUpperCase() === 'PCS') {
+        } else if (product.unit.toUpperCase() === 'PIECES') {
             // For PCS, we assume there's a single price for each piece
-            if (!product.price || !product.mrp) {
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
                 return {
                     statusCode: 400,
                     body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
                 };
             }
 
-            price = parseFloat(product.price);
-            mrp = parseFloat(product.mrp);
+            price = parseFloat(inventoryItem.onlineStorePrice);
+            mrp = parseFloat(inventoryItem.compareAt);
             savings = parseFloat(((mrp - price) * quantity).toFixed(2));
             subtotal = parseFloat((price * quantity).toFixed(2));
 

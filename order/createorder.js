@@ -1,4 +1,4 @@
-const { DynamoDBClient, GetItemCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const crypto = require('crypto')
 require('dotenv').config();
@@ -35,13 +35,14 @@ const deliverySlotTableName = process.env.DELIVERY_SLOT_TABLE; // Add the delive
 // Generate a random 5-digit number
 function generateRandomOrderId() {
   const part1 = a();
-	const part2 = a();
-	const s1 = BigInt(`0x${part1}`).toString().slice(0, 7);
-	const s2 = BigInt(`0x${part2}`).toString().slice(0, 7);
-	return `401-${s1}-${s2}`;}
+  const part2 = a();
+  const s1 = BigInt(`0x${part1}`).toString().slice(0, 7);
+  const s2 = BigInt(`0x${part2}`).toString().slice(0, 7);
+  return `401-${s1}-${s2}`;
+}
 
 function a() {
-	return crypto.randomBytes(10).toString("hex");
+  return crypto.randomBytes(10).toString("hex");
 }
 
 // Function to fetch user details by userId
@@ -72,6 +73,18 @@ async function getAddressDetails(userId, addressId) {
 
 // Function to fetch product details by productId
 async function getProductDetails(productId, quantity, quantityUnits) {
+  const params = {
+    TableName: process.env.INVENTORY_TABLE,
+    IndexName: "productIdIndex", // Replace with your actual GSI name
+    KeyConditionExpression: "productId = :productId",
+    ExpressionAttributeValues: {
+      ":productId": { S: productId },
+    },
+  };
+
+  // const inventoryData = await dynamoDB.send(new QueryCommand(params));
+  const inventoryData = await dynamoDB.send(new QueryCommand(params));
+
   const getProductParams = {
     TableName: productTableName,
     Key: marshall({ id: productId })
@@ -80,37 +93,50 @@ async function getProductDetails(productId, quantity, quantityUnits) {
   if (!productItem) {
     throw new Error(`Product with ID ${productId} not found`);
   }
+
+
+  console.log(productItem)
+  if (!productItem) {
+    throw new Error(`Product with ID ${productId} not found`);
+  }
   const product = unmarshall(productItem);
 
   let price, mrp, savings, subtotal;
+  const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
 
-  if (product.unit.toUpperCase() === 'PCS') {
+  if (product.unit.toUpperCase() === 'PIECES') {
     // For PCS, we assume there's a single price for each piece
-    if (!product.price || !product.mrp) {
+    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
       throw new Error("Invalid product pricing for PCS");
     }
 
-    price = parseFloat(product.price);
-    mrp = parseFloat(product.mrp);
+    price = parseFloat(inventoryItem.onlineStorePrice);
+    mrp = parseFloat(inventoryItem.compareAt);
     savings = parseFloat(((mrp - price) * quantity).toFixed(2));
     subtotal = parseFloat((price * quantity).toFixed(2));
+    
 
   } else if (product.unit.toUpperCase() === 'GRAMS') {
     // For KG, find the appropriate unit price based on quantityUnits
-    if (!product.unitPrices || !Array.isArray(product.unitPrices)) {
+    console.log("Inventory")
+    console.log(inventoryItem.unitPrices)
+    if (!inventoryItem.unitPrices) {
       throw new Error("Invalid product unitPrices for KG");
     }
 
-    let unitPrice = null;
-    for (let i = product.unitPrices.length - 1; i >= 0; i--) {
-      if (quantityUnits === product.unitPrices[i].qty) {
-        unitPrice = product.unitPrices[i];
+    var unitPrice = null;
+    for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
+      if (quantityUnits === inventoryItem.unitPrices[i].qty) {
+        console.log(inventoryItem.unitPrices[i])
+        unitPrice = inventoryItem.unitPrices[i];
         break;
       }
     }
+    console.log(unitPrice)
 
     if (!unitPrice) {
       throw new Error("Invalid quantity units for KG");
+      console.log("error")
     }
 
     price = parseFloat(unitPrice.price);
@@ -238,9 +264,9 @@ module.exports.handler = async (event) => {
       items: orderItems,
       totalPrice: totalPrice.toFixed(2),
       subTotal: subTotal,
-      customerId : userId,
-      customerName : userDetails.Name,
-      customerNumber : userDetails.MobileNumber,
+      customerId: userId,
+      customerName: userDetails.Name,
+      customerNumber: userDetails.MobileNumber,
       tax: 0,
       deliveryCharges: 0,
       totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
@@ -269,8 +295,8 @@ module.exports.handler = async (event) => {
       input: JSON.stringify({
         id: orderId
       })
-  };
-    const  res = await stepfunctions.startExecution(SFparams).promise();
+    };
+    const res = await stepfunctions.startExecution(SFparams).promise();
     console.log(res);
     await dynamoDB.send(new PutItemCommand(putParams));
 
@@ -295,14 +321,14 @@ module.exports.handler = async (event) => {
       console.log("online")
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: 'Order created successfully', statuscode:200,paymentLink: paymentDetails.paymentLink }),
+        body: JSON.stringify({ message: 'Order created successfully', statuscode: 200, paymentLink: paymentDetails.paymentLink }),
       };
     } else {
       console.log("cash")
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: 'Order created successfully',statuscode:200, orderId: orderId }),
+        body: JSON.stringify({ message: 'Order created successfully', statuscode: 200, orderId: orderId }),
       };
     }
 
@@ -312,7 +338,7 @@ module.exports.handler = async (event) => {
     console.error('Error:', error.message);
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Failed to process request',statuscode:200, error: error.message }),
+      body: JSON.stringify({ message: 'Failed to process request', statuscode: 200, error: error.message }),
     };
   }
 };

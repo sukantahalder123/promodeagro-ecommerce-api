@@ -354,6 +354,13 @@ exports.handler = async (event) => {
         },
         // Remove Limit here
         ExclusiveStartKey: exclusiveStartKey,
+        FilterExpression: '#availability = :trueValue',
+        ExpressionAttributeNames: {
+          '#availability': 'availability',
+        },
+        ExpressionAttributeValues: {
+          ':trueValue': { BOOL: true }, // Adjust this according to the AWS SDK v3 format
+        },
     };
 
     let filterExpression = '';

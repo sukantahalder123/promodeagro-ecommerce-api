@@ -1,6 +1,10 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 require('dotenv').config();
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+
 
 
 // Function to fetch product details from DynamoDB
@@ -54,12 +58,26 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
 
         let price, mrp, savings, subtotal;
 
+        const InventoryParams = {
+            TableName: process.env.INVENTORY_TABLE,
+            IndexName: "productIdIndex", // Replace with your actual GSI name
+            KeyConditionExpression: "productId = :productId",
+            ExpressionAttributeValues: {
+                ":productId": { S: productId },
+            },
+        };
+
+
+        const inventoryData = await dynamoDB.send(new QueryCommand(InventoryParams));
+        const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
+
+
         if (product.unit.toUpperCase() === 'GRAMS') {
             // Find the appropriate unit price based on quantityUnits for KG
             let unitPrice = null;
-            for (let i = product.unitPrices.length - 1; i >= 0; i--) {
-                if (quantityUnits === product.unitPrices[i].qty) {
-                    unitPrice = product.unitPrices[i];
+            for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
+                if (quantityUnits === inventoryItem.unitPrices[i].qty) {
+                    unitPrice = inventoryItem.unitPrices[i];
                     break;
                 }
             }
@@ -76,17 +94,17 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
             savings = (unitPrice.savings * quantity).toFixed(2);
             subtotal = (price * quantity).toFixed(2);
 
-        } else if (product.unit.toUpperCase() === 'PCS') {
+        } else if (product.unit.toUpperCase() === 'PIECES') {
             // For PCS, we assume there's a single price for each piece
-            if (!product.price || !product.mrp) {
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
                 return {
                     statusCode: 400,
                     body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
                 };
             }
 
-            price = product.price;
-            mrp = product.mrp;
+            price = inventoryItem.onlineStorePrice;
+            mrp = inventoryItem.compareAt;
             savings = ((mrp - price) * quantity).toFixed(2);
             subtotal = (price * quantity).toFixed(2);
 

@@ -24,9 +24,14 @@ exports.handler = async (event) => {
             IndexName: 'subCategory-index',
             KeyConditionExpression: 'subCategory = :subcategory',
             ExpressionAttributeValues: {
-                ':subcategory': subcategory,
+                ':subcategory': subcategory, // Define subcategory correctly\
+                ':trueValue': true,  // Correct boolean for availability
             },
             Select: 'COUNT',
+            FilterExpression: '#availability = :trueValue',  // Use availability in FilterExpression
+            ExpressionAttributeNames: {
+                '#availability': 'availability',  // Define availability correctly
+            },
         };
         const countData = await docClient.query(countParams).promise();
         const totalItems = countData.Count;
@@ -35,27 +40,52 @@ exports.handler = async (event) => {
         // Fetch paginated products
         const params = {
             TableName: process.env.PRODUCTS_TABLE,
-            IndexName: 'subCategory-index', // Ensure an index on the 'Subcategory' attribute exists
-            KeyConditionExpression: 'subCategory = :subcategory',
+            IndexName: 'subCategory-index',
+            KeyConditionExpression: 'subCategory = :subcategory',  // Using subCategory as partition key
             ExpressionAttributeValues: {
                 ':subcategory': subcategory,
+                ':trueValue': true,  // Correct boolean for availability
             },
             Limit: parseInt(pageSize),
             ExclusiveStartKey: decodedExclusiveStartKey,
+            FilterExpression: '#availability = :trueValue',  // Use availability in FilterExpression
+            ExpressionAttributeNames: {
+                '#availability': 'availability',  // Define availability correctly
+            },
         };
 
         const data = await docClient.query(params).promise();
-        const products = data.Items || [];
+        let products = data.Items || [];
 
-        // Convert qty to grams in unitPrices
-        products.forEach(product => {
+        // Fetch inventory data for each product using productIdIndex
+        for (let product of products) {
+            const inventoryParams = {
+                TableName: process.env.INVENTORY_TABLE,
+                IndexName: "productIdIndex",  // GSI name for inventory
+                KeyConditionExpression: "productId = :productId",
+                ExpressionAttributeValues: {
+                    ":productId": product.id,  // Product id
+                },
+            };
+
+            const inventoryData = await docClient.query(inventoryParams).promise();
+            const inventoryItem = inventoryData.Items && inventoryData.Items[0];
+
+            // If inventory data exists, update the product with price, mrp, and unitPrices
+            if (inventoryItem) {
+                product.price = inventoryItem.unitPrices[0].price || 0;
+                product.mrp = inventoryItem.unitPrices[0].mrp || 0;
+                product.unitPrices = inventoryItem.unitPrices || [];
+            }
+
+            // Convert qty to grams in unitPrices if needed
             if (product.unitPrices) {
                 product.unitPrices = product.unitPrices.map(unitPrice => ({
                     ...unitPrice,
-                    qty: unitPrice.qty
+                    qty: unitPrice.qty,  // If required, adjust this logic
                 }));
             }
-        });
+        }
 
         if (userId) {
             // Fetch cart items for the user
@@ -63,8 +93,8 @@ exports.handler = async (event) => {
                 TableName: 'CartItems',
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
-                    ':userId': userId
-                }
+                    ':userId': userId,
+                },
             };
 
             const cartData = await docClient.query(cartParams).promise();
@@ -75,8 +105,8 @@ exports.handler = async (event) => {
                 TableName: 'ProductWishLists',
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
-                    ':userId': userId
-                }
+                    ':userId': userId,
+                },
             };
 
             const wishlistData = await docClient.query(wishlistParams).promise();
@@ -91,8 +121,8 @@ exports.handler = async (event) => {
                     product.inCart = true;
                     product.cartItem = {
                         ...cartItem,
-                        selectedQuantityUnitprice: cartItem.Price,
-                        selectedQuantityUnitMrp: cartItem.Mrp,
+                        selectedQuantityUnitprice: product.price,
+                        selectedQuantityUnitMrp: product.mrp,
                     };
                 } else {
                     product.inCart = false;
@@ -102,8 +132,8 @@ exports.handler = async (event) => {
                         Savings: 0,
                         QuantityUnits: 0,
                         Subtotal: 0,
-                        Price: 0,
-                        Mrp: 0,
+                        Price: product.price || 0,
+                        Mrp: product.mrp || 0,
                         Quantity: 0,
                         productImage: product.image || '',
                         productName: product.name || '',
@@ -122,8 +152,8 @@ exports.handler = async (event) => {
                     Savings: 0,
                     QuantityUnits: 0,
                     Subtotal: 0,
-                    Price: 0,
-                    Mrp: 0,
+                    Price: product.price || 0,
+                    Mrp: product.mrp || 0,
                     Quantity: 0,
                     productImage: product.image || '',
                     productName: product.name || '',

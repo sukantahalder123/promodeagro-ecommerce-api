@@ -1,5 +1,11 @@
 'use strict';
 
+
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+
+
+
 const AWS = require('aws-sdk');
 require('dotenv').config();
 
@@ -8,6 +14,7 @@ AWS.config.update({
 });
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoDBs = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 module.exports.getProductById = async (event) => {
   try {
@@ -29,8 +36,25 @@ module.exports.getProductById = async (event) => {
         body: JSON.stringify({ message: 'Product not found' }),
       };
     }
+    const params = {
+      TableName: process.env.INVENTORY_TABLE,
+      IndexName: "productIdIndex", // Replace with your actual GSI name
+      KeyConditionExpression: "productId = :productId",
+      ExpressionAttributeValues: {
+        ":productId": { S: productId },
+      },
+    };
 
-    let product = productData.Item;
+    const inventoryData = await dynamoDBs.send(new QueryCommand(params));
+    const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
+
+    var product = productData.Item;
+    product.price = inventoryItem.unitPrices[0].price;
+    product.mrp = inventoryItem.unitPrices[0].mrp;
+    product.unitPrices = inventoryItem.unitPrices;
+
+
+
 
     // Convert qty to grams if necessary
     if (product.unitPrices) {

@@ -114,7 +114,7 @@ async function getProductDetails(productId, quantity, quantityUnits) {
     mrp = parseFloat(inventoryItem.compareAt);
     savings = parseFloat(((mrp - price) * quantity).toFixed(2));
     subtotal = parseFloat((price * quantity).toFixed(2));
-    
+
 
   } else if (product.unit.toUpperCase() === 'GRAMS') {
     // For KG, find the appropriate unit price based on quantityUnits
@@ -265,8 +265,8 @@ module.exports.handler = async (event) => {
       totalPrice: totalPrice.toFixed(2),
       subTotal: subTotal,
       customerId: userId,
-      customerName: userDetails.Name,
-      customerNumber: userDetails.MobileNumber,
+      customerName: addressDetails.name,
+      customerNumber: addressDetails.phoneNumber,
       tax: 0,
       deliveryCharges: 0,
       totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
@@ -284,6 +284,9 @@ module.exports.handler = async (event) => {
       _version: '1',
       __typename: 'Order'
     };
+
+
+    // console.log(orderItem)
 
     // Save order item to DynamoDB using PutItemCommand
     const putParams = {

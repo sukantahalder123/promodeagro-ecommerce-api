@@ -20,15 +20,17 @@ exports.handler = async (event) => {
 
   const params = {
     TableName: process.env.PRODUCTS_TABLE,
-    FilterExpression: "contains(#name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query)",
+    FilterExpression: "(contains(#name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query)) AND #availability = :trueValue",
     ExpressionAttributeNames: {
       "#name": "name",
       "#category": "category",
       "#subCategory": "subCategory",
-      "#description": "description"
+      "#description": "description",
+      "#availability": "availability"
     },
     ExpressionAttributeValues: {
-      ":query": query
+      ":query": query,
+      ":trueValue": true
     }
   };
 
@@ -36,22 +38,51 @@ exports.handler = async (event) => {
     const data = await docClient.send(new ScanCommand(params));
     const products = data.Items;
 
-    // Convert qty to grams in unitPrices and add selectedQuantityUnitPrice and mrp
-    products.forEach(product => {
+    // For each product, fetch price, mrp, and unitPrices from the Inventory table
+    for (let product of products) {
+      const inventoryParams = {
+        TableName: process.env.INVENTORY_TABLE,
+        IndexName: "productIdIndex",  // Assuming GSI on Inventory table with productId
+        KeyConditionExpression: "productId = :productId",
+        ExpressionAttributeValues: {
+          ":productId": product.id,  // Using product id as key
+        },
+      };
+
+      const inventoryData = await docClient.send(new QueryCommand(inventoryParams));
+      const inventoryItem = inventoryData.Items && inventoryData.Items[0];  // Assuming single inventory item
+
+      if (inventoryItem) {
+        if (inventoryItem.unitPrices) {
+          product.price = inventoryItem.unitPrices[0].price || 0;
+          product.mrp = inventoryItem.unitPrices[0].mrp || 0;
+          product.unitPrices = inventoryItem.unitPrices || [];
+        } else {
+          product.price = inventoryItem.onlineStorePrice || 0;
+          product.mrp = inventoryItem.compareAt || 0;
+          product.unitPrices = inventoryItem.unitPrices || [];
+        }
+      } else {
+        product.price = 0;
+        product.mrp = 0;
+        product.unitPrices = [];
+      }
+
+      // Convert qty to grams in unitPrices if required
       if (product.unitPrices && product.unitPrices.length > 0) {
         product.unitPrices = product.unitPrices.map(unitPrice => ({
           ...unitPrice,
-          qty: unitPrice.qty
+          qty: unitPrice.qty,  // Adjust conversion logic here if needed
         }));
 
-        // Assume first unitPrice as the default selected price
+        // Set default selectedQuantityUnitPrice and mrp
         product.selectedQuantityUnitPrice = product.unitPrices[0].price || 0;
         product.mrp = product.unitPrices[0].mrp || 0;
       } else {
         product.selectedQuantityUnitPrice = 0;
         product.mrp = 0;
       }
-    });
+    }
 
     if (userId) {
       // Fetch cart items for the user

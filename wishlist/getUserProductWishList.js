@@ -1,6 +1,12 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
+
 require('dotenv').config();
+
+// DynamoDB Client to query Inventory table
+const dynamoDBs = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 // Function to fetch product details from DynamoDB
 async function getProductDetails(productId) {
@@ -16,6 +22,26 @@ async function getProductDetails(productId) {
         return data.Item;
     } catch (error) {
         console.error('Error fetching product details:', error);
+        throw error;
+    }
+}
+
+// Function to fetch inventory details from the Inventory table
+async function getInventoryDetails(productId) {
+    const params = {
+        TableName: process.env.INVENTORY_TABLE,
+        IndexName: "productIdIndex", // Adjust based on your table's structure
+        KeyConditionExpression: "productId = :productId",
+        ExpressionAttributeValues: {
+            ":productId": { S: productId }
+        }
+    };
+
+    try {
+        const inventoryData = await dynamoDBs.send(new QueryCommand(params));
+        return (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : null;
+    } catch (error) {
+        console.error('Error fetching inventory details:', error);
         throw error;
     }
 }
@@ -104,7 +130,22 @@ exports.handler = async (event) => {
         const productIds = wishlistItems.map(item => item.ProductId);
 
         // Fetch product details for each product ID
-        const productDetailsPromises = productIds.map(id => getProductDetails(id));
+        const productDetailsPromises = productIds.map(async (id) => {
+            let product = await getProductDetails(id);
+
+            // Fetch corresponding inventory details
+            const inventory = await getInventoryDetails(id);
+
+            // Add inventory details (price, unitPrices, mrp) to the product
+            if (inventory) {
+                product.price = inventory.unitPrices[0]?.price || 0;
+                product.mrp = inventory.unitPrices[0]?.mrp || 0;
+                product.unitPrices = inventory.unitPrices || [];
+            }
+
+            return product;
+        });
+
         const productDetailsList = await Promise.all(productDetailsPromises);
 
         // Fetch cart items
@@ -113,6 +154,7 @@ exports.handler = async (event) => {
         // Combine product details with cart items and wishlist status
         const result = productDetailsList.map(product => {
             const cartItem = cartItems.find(item => item.ProductId === product.id);
+
             const wishlistItem = wishlistItems.find(item => item.ProductId === product.id);
             return {
                 ...product,

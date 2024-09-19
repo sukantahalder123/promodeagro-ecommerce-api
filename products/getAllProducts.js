@@ -285,7 +285,6 @@
 
 //   return productsWithCartInfo;
 // }
-
 const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 require('dotenv').config();
@@ -297,37 +296,21 @@ module.exports.handler = async (event) => {
     const userId = event.queryStringParameters && event.queryStringParameters.userId;
     const pageNumber = parseInt(event.queryStringParameters.pageNumber) || 1;
     const pageSize = parseInt(event.queryStringParameters.pageSize) || 10;
-    const exclusiveStartKeyParam = event.queryStringParameters.exclusiveStartKey;
-    const exclusiveStartKey = exclusiveStartKeyParam
-      ? JSON.parse(Buffer.from(decodeURIComponent(exclusiveStartKeyParam), 'base64').toString('utf8'))
-      : undefined;
 
-    console.log("Exclusive Start Key:", JSON.stringify(exclusiveStartKey, null, 2));
-
-    // Fetch total item count
-    const countParams = {
+    // Fetch all products (consider potential large data size)
+    const scanParams = {
       TableName: process.env.PRODUCTS_TABLE,
-      Select: "COUNT",
-    };
-    const countData = await dynamoDB.send(new ScanCommand(countParams));
-    const totalItems = countData.Count;
-    const totalPages = Math.ceil(totalItems / pageSize);
-
-    // Fetch paginated products
-    const getAllProductsParams = {
-      TableName: process.env.PRODUCTS_TABLE,
-      Limit: pageSize,
-      ExclusiveStartKey: exclusiveStartKey,
       FilterExpression: '#availability = :trueValue',
       ExpressionAttributeNames: {
         '#availability': 'availability',
       },
       ExpressionAttributeValues: {
-        ':trueValue': { BOOL: true }, // Adjust this according to the AWS SDK v3 format
+        ':trueValue': { BOOL: true },
       },
     };
-    const productsData = await dynamoDB.send(new ScanCommand(getAllProductsParams));
 
+    const productsData = await dynamoDB.send(new ScanCommand(scanParams));
+    
     if (!productsData.Items || productsData.Items.length === 0) {
       return {
         statusCode: 404,
@@ -336,46 +319,38 @@ module.exports.handler = async (event) => {
     }
 
     let products = productsData.Items.map(item => unmarshall(item));
-    // products = products.filter(product => product.availability === true);
 
-    console.log("Filtered Products:", JSON.stringify(products, null, 2));
+    // Calculate total items and total pages
+    const totalItems = products.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-    // Convert qty to grams
-    products = products.map(product => {
-      if (product.unitPrices) {
-        product.unitPrices = product.unitPrices.map(unitPrice => ({
-          ...unitPrice,
-          qty: unitPrice.qty
-        }));
-      }
-      return product;
-    });
+    // Calculate start and end indices for pagination
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    // Slice products for the current page
+    products = products.slice(startIndex, endIndex);
 
+    // Fetch additional info (cart and wishlist) as before
     let productsWithCartInfo = await getProductsWithCartInfo(products, userId);
 
     if (userId) {
       productsWithCartInfo = await fetchCartAndWishlistInfo(productsWithCartInfo, userId);
     }
 
-    // console.log("Products with Cart and Wishlist Info:", JSON.stringify(productsWithCartInfo, null, 2));
-
-    // Encode the LastEvaluatedKey for pagination
-    const encodedLastEvaluatedKey = productsData.LastEvaluatedKey
-      ? encodeURIComponent(Buffer.from(JSON.stringify(productsData.LastEvaluatedKey)).toString('base64'))
-      : null;
-
-    // Prepare the pagination response
     const response = {
       products: productsWithCartInfo,
       pagination: {
         currentPage: pageNumber,
         pageSize: pageSize,
         totalPages: totalPages,
-        nextPage: encodedLastEvaluatedKey ? pageNumber + 1 : null,
-        lastEvaluatedKey: encodedLastEvaluatedKey,
-        TotalProducts: totalItems
+        nextPage: pageNumber + 1 || null,
+        lastEvaluatedKey: "faead",
+        TotalProducts: totalItems,
       },
     };
+
+
 
     return {
       statusCode: 200,
@@ -416,6 +391,8 @@ async function getProductsWithCartInfo(products, userId) {
           throw new Error("Product not found in inventory");
         }
 
+        console.log(productId)
+
         const inventoryItem = unmarshall(inventoryData.Items[0]);
 
         const defaultCartItem = {
@@ -442,7 +419,7 @@ async function getProductsWithCartInfo(products, userId) {
           availability: product.availability,
           price: inventoryItem.unitPrices[0].price || 0,
           unitPrices: inventoryItem.unitPrices,
-          mrp: inventoryItem.unitPrices[0].mrp|| 0,
+          mrp: inventoryItem.unitPrices[0].mrp || 0,
           inCart: false,
           inWishlist: false,
           cartItem: defaultCartItem,
@@ -532,8 +509,6 @@ async function fetchCartAndWishlistInfo(products, userId) {
       try {
         const inventoryData = await dynamoDB.send(new QueryCommand(params));
         const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
-
-        console.log(inventoryItem)
 
         return {
           unit: product.unit,

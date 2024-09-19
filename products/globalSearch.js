@@ -20,9 +20,9 @@ exports.handler = async (event) => {
 
   const params = {
     TableName: process.env.PRODUCTS_TABLE,
-    FilterExpression: "(contains(#name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query)) AND #availability = :trueValue",
+    FilterExpression: "(contains(#search_name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query)) AND #availability = :trueValue",
     ExpressionAttributeNames: {
-      "#name": "name",
+      "#search_name": "search_name",  // Changed name field to search_name
       "#category": "category",
       "#subCategory": "subCategory",
       "#description": "description",

@@ -1,10 +1,12 @@
 const { DynamoDBClient, GetItemCommand, PutItemCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
+
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 
 const SALES_TABLE_NAME = "sales";
 const ORDERS_TABLE_NAME = "Orders";
-const PRODUCTS_TABLE_NAME = "Products";
+const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE;
 const dynamoDB = new DynamoDBClient({});
 
 exports.handler = async (event) => {

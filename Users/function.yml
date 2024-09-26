@@ -119,3 +119,10 @@ getUserDetailsById:
     - httpApi:
         path: /getPersnalDetails
         method: get
+
+createUserAndAddress:
+  handler: Users/createUserAndAddress.handler
+  events:
+    - httpApi:
+        path: /createUserAndAddress
+        method: post

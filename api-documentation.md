@@ -825,3 +825,35 @@ The request body should be a JSON object with the following fields:
 
 
 
+
+
+
+
+
+## API Endpoint: Create use and Addresss
+
+### Method
+- **Method**: POST
+
+### URL
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/createUserAndAddress`
+
+### Content-Type
+- **Content-Type**: `application/json`
+
+### Request Body
+The request body should be a JSON object with the following fields:
+```json
+{
+   "name": "string",
+   "email": "string",
+   "phoneNumber": "string",
+   "flat": "string",
+   "block": "string",
+   "apartment": "string",
+   "area": "string",
+   "zipCode": "string"
+}
+
+
+```

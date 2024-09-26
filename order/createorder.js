@@ -3,6 +3,8 @@ const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const crypto = require('crypto')
 require('dotenv').config();
 const AWS = require('aws-sdk');
+const axios = require('axios');
+
 
 AWS.config.update({ region: 'us-east-1' }); // Replace with your desired region
 
@@ -14,6 +16,8 @@ const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const lambda = new LambdaClient({});
 const { createPaymentLink } = require('../payment/createPaymentOrder');
+const { generateBillImage } = require('../whatsaapNotifications/generateBillImage');
+const { shareBillOnWhatsaap } = require('../whatsaapNotifications/shareBillOnWhatsaap');
 // Create DynamoDB client with options to remove undefined values
 const dynamoDB = new DynamoDBClient({
   // Add any specific configurations here
@@ -227,6 +231,7 @@ module.exports.handler = async (event) => {
       orderItems.push({
         productId: item.productId,
         productName: product.name,
+        unit:product.unit,
         quantity: item.quantity,
         quantityUnits: item.quantityUnits,
         price: price,
@@ -234,6 +239,8 @@ module.exports.handler = async (event) => {
         savings: savings,
         subtotal: subtotal
       });
+
+      console.log(orderItems)
 
       // Delete the item from the cart after processing
       if (paymentDetails.method === "cash") {
@@ -252,6 +259,15 @@ module.exports.handler = async (event) => {
       paymentDetails.status = "PENDING"
       paymentDetails.paymentLink = payment;
     }
+
+    console.log("bill")
+
+
+    const bill = await generateBillImage(orderItems)
+    console.log(bill)
+
+     await shareBillOnWhatsaap(bill,addressDetails.name,addressDetails.phoneNumber)
+    //  await sendBill(addressDetails.phoneNumber, process.env.FACEBOOK_ACCESS_TOKEN, orderItems)
 
     console.log(paymentDetails);
     console.log("USER DETAILS : ", userDetails);
@@ -345,3 +361,60 @@ module.exports.handler = async (event) => {
     };
   }
 };
+
+
+
+async function sendBill(number, token, items) {
+  try {
+    // Calculate the total price and format the items into a string
+    let totalPrice = 0;
+    let itemsList = items.map(item => {
+      let price = parseFloat(item.price);
+      let quantity = parseInt(item.quantity);
+      let subtotal = price * quantity;
+      totalPrice += subtotal;
+
+      // Return the formatted string for each item
+      return `${item.productName} ${price.toFixed(2).padStart(6)} ${quantity.toString().padStart(8)} ${subtotal.toFixed(2).padStart(8)}`;
+    }).join('\n');
+
+    // Format the bill content
+    let billContent = `
+* Your Bill *
+
+Item                 Price  Qty  Subtotal
+----------------------------------------
+${itemsList}
+----------------------------------------
+Total: ${totalPrice.toFixed(2).padStart(8)}
+`;
+
+    let data = JSON.stringify({
+      "messaging_product": "whatsapp",
+      "recipient_type": "individual",
+      "to": number,
+      "type": "text",
+      "text": {
+        "body": billContent.trim()
+      }
+    });
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'https://graph.facebook.com/v19.0/208582795666783/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      data: data
+    };
+
+    const response = await axios.request(config);
+    console.log(response)
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { error: error.message };
+  }
+}

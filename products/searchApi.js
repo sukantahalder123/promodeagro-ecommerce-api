@@ -325,7 +325,7 @@ const client = new AWS.DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
-    const { discounts, userId, ratingFilter, category, subcategory } = event.queryStringParameters || {};
+    const { discounts, userId, category, subcategory } = event.queryStringParameters || {};
     let { minPrice, maxPrice } = event.queryStringParameters || {};
 
     const pageNumber = parseInt(event.queryStringParameters.pageNumber) || 1;
@@ -334,7 +334,7 @@ exports.handler = async (event) => {
     // Step 1: Query Inventory table for price details
     const inventoryParams = {
         TableName: process.env.INVENTORY_TABLE,
-        ProjectionExpression: 'productId, onlineStorePrice' // Fetch the price and productId fields from Inventory
+        ProjectionExpression: 'productId, onlineStorePrice, unitPrices' // Include unitPrices
     };
 
     let inventoryItems = [];
@@ -380,9 +380,10 @@ exports.handler = async (event) => {
     // Step 4: Query the Products table to fetch product details for matching productIds
     const productsParams = {
         TableName: process.env.PRODUCTS_TABLE,
-        ProjectionExpression: 'id, #name, category, subcategory, savingsPercentage, image',
+        ProjectionExpression: 'id, #name, category, subcategory, savingsPercentage, image, description, #unit',
         ExpressionAttributeNames: {
             '#name': 'name',
+            '#unit': 'unit', // Map 'unit' to a placeholder
         },
         FilterExpression: 'id IN (' + productIds.map((_, index) => `:productId${index}`).join(', ') + ')',
         ExpressionAttributeValues: Object.fromEntries(
@@ -407,7 +408,8 @@ exports.handler = async (event) => {
     products = products.map(product => {
         const inventoryItem = inventoryItems.find(item => item.productId === product.id);
         if (inventoryItem) {
-            product.price = inventoryItem.onlineStorePrice; // Attach price from Inventory
+            product.price = inventoryItem.onlineStorePrice || 0; // Attach price from Inventory
+            product.unitPrices = inventoryItem.unitPrices || []; // Attach unit prices
         }
         return product;
     });
@@ -457,7 +459,7 @@ exports.handler = async (event) => {
                     Quantity: 0,
                     productImage: product.image || '',
                     productName: product.name || '',
-                    availability: product.availability || ''
+                    availability: product.availability || true // Set default availability
                 };
             });
         } catch (error) {
@@ -470,7 +472,6 @@ exports.handler = async (event) => {
     }
 
     // Step 7: Apply additional filters like discounts, category, subcategory, etc.
-    // Discount filter
     if (discounts) {
         const discountRanges = {
             'upto5': [0, 5],
@@ -489,12 +490,10 @@ exports.handler = async (event) => {
         });
     }
 
-    // Category filter
     if (category) {
         products = products.filter(product => product.category.toLowerCase() === category.toLowerCase());
     }
 
-    // Subcategory filter
     if (subcategory) {
         products = products.filter(product => product.subcategory.toLowerCase() === subcategory.toLowerCase());
     }
@@ -508,7 +507,16 @@ exports.handler = async (event) => {
 
     // Step 9: Format the response
     const response = {
-        products: paginatedProducts,
+        products: paginatedProducts.map(product => ({
+            ...product,
+            unitPrices: product.unitPrices.map(unitPrice => ({
+                mrp: unitPrice.mrp,
+                price: unitPrice.price,
+                savings: unitPrice.savings,
+                qty: unitPrice.qty,
+            })),
+            availability: true // Set availability if needed
+        })),
         pagination: {
             currentPage: pageNumber,
             pageSize: pageSize,

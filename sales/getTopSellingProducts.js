@@ -10,6 +10,7 @@ const SALES_TABLE_NAME = process.env.SALES_TABLE || "sales";
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE || "Products";
 const CART_ITEMS_TABLE_NAME = process.env.CART_ITEMS_TABLE || "CartItems";
 const WISHLIST_ITEMS_TABLE_NAME = process.env.WISHLIST_ITEMS_TABLE || "ProductWishLists";
+const INVENTORY_TABLE_NAME = process.env.INVENTORY_TABLE || "Inventory";
 
 exports.handler = async (event) => {
     try {
@@ -19,7 +20,6 @@ exports.handler = async (event) => {
         const scanParams = {
             TableName: SALES_TABLE_NAME
         };
-
         const scanResult = await dynamoDB.send(new ScanCommand(scanParams));
         const sales = scanResult.Items.map(item => unmarshall(item));
 
@@ -52,24 +52,50 @@ exports.handler = async (event) => {
         let products = productsData.Items.map(item => unmarshall(item));
 
         // Filter products by category and subcategory if provided
-     
         if (subcategory) {
             products = products.filter(product => product.subCategory && product.subCategory === subcategory);
         }
 
-        // Filter top-selling products with product details
-        const topSellingProductDetails = topSellingProducts.map(topProduct => {
+        // Fetch inventory data for the top-selling products
+        const getInventoryData = async (productId) => {
+            const inventoryParams = {
+                TableName: INVENTORY_TABLE_NAME,
+                IndexName: "productIdIndex", // Replace with your actual GSI name
+                KeyConditionExpression: "productId = :productId",
+                ExpressionAttributeValues: {
+                    ":productId": { S: productId },
+                },
+            };
+
+            const inventoryData = await dynamoDB.send(new QueryCommand(inventoryParams));
+            if (inventoryData.Items && inventoryData.Items.length > 0) {
+                const inventoryItem = unmarshall(inventoryData.Items[0]);
+                return {
+                    price: inventoryItem.unitPrices[0].price,
+                    mrp: inventoryItem.unitPrices[0].mrp,
+                    unitPrices: inventoryItem.unitPrices
+                };
+            }
+            return {};
+        };
+
+        // Filter top-selling products and merge product details
+        const topSellingProductDetails = await Promise.all(topSellingProducts.map(async (topProduct) => {
             const product = products.find(p => p.id === topProduct.productId);
             if (product) {
+                const inventoryData = await getInventoryData(topProduct.productId);
                 return {
                     ...topProduct,
                     ...product,
+                    price: inventoryData.price || 0,
+                    mrp: inventoryData.mrp || 0,
+                    unitPrices: inventoryData.unitPrices || [],
                     inCart: false, // Default value
                     inWishlist: false // Default value
                 };
             }
             return null;
-        }).filter(item => item !== null);
+        }));
 
         // Fetch cart items and wishlist items if userId is provided
         let cartItemsMap = new Map();
@@ -104,26 +130,28 @@ exports.handler = async (event) => {
         }
 
         // Merge cart and wishlist items with top-selling products
-        const topSellingProductsWithInfo = topSellingProductDetails.map(product => {
-            const cartItem = cartItemsMap.get(product.id) || {
-                ProductId: product.id,
-                UserId: userId || '',
-                Savings: 0,
-                QuantityUnits: 0,
-                Subtotal: 0,
-                Price: 0,
-                Mrp: 0,
-                Quantity: 0,
-                productImage: product.image || '',
-                productName: product.name || ''
-            };
-            return {
-                ...product,
-                inCart: cartItemsMap.has(product.id),
-                inWishlist: wishlistItemsSet.has(product.id),
-                cartItem
-            };
-        });
+        const topSellingProductsWithInfo = topSellingProductDetails
+            .filter(product => product !== null)
+            .map(product => {
+                const cartItem = cartItemsMap.get(product.id) || {
+                    ProductId: product.id,
+                    UserId: userId || '',
+                    Savings: 0,
+                    QuantityUnits: 0,
+                    Subtotal: 0,
+                    Price: 0,
+                    Mrp: 0,
+                    Quantity: 0,
+                    productImage: product.image || '',
+                    productName: product.name || ''
+                };
+                return {
+                    ...product,
+                    inCart: cartItemsMap.has(product.id),
+                    inWishlist: wishlistItemsSet.has(product.id),
+                    cartItem
+                };
+            });
 
         return {
             statusCode: 200,

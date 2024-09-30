@@ -123,7 +123,37 @@ exports.handler = async (event) => {
             savings = parseFloat(((mrp - price) * quantity).toFixed(2));
             subtotal = parseFloat((price * quantity).toFixed(2));
 
-        } else {
+        }  else if (product.unit.toUpperCase() === 'KGS') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = parseFloat(inventoryItem.onlineStorePrice);
+            mrp = parseFloat(inventoryItem.compareAt);
+            savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+            subtotal = parseFloat((price * quantity).toFixed(2));
+
+        }
+        else if (product.unit.toUpperCase() === 'LITRE') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = parseFloat(inventoryItem.onlineStorePrice);
+            mrp = parseFloat(inventoryItem.compareAt);
+            savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+            subtotal = parseFloat((price * quantity).toFixed(2));
+
+        }
+        else {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Invalid product unit" }),

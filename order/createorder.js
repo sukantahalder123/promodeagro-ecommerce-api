@@ -115,12 +115,37 @@ async function getProductDetails(productId, quantity, quantityUnits) {
     }
 
     price = parseFloat(inventoryItem.onlineStorePrice);
-    mrp = parseFloat(inventoryItem.compareAt);
+    mrp = parseFloat(inventoryItem.compareAt) || 0;
     savings = parseFloat(((mrp - price) * quantity).toFixed(2));
     subtotal = parseFloat((price * quantity).toFixed(2));
 
 
-  } else if (product.unit.toUpperCase() === 'GRAMS') {
+  }else if (product.unit.toUpperCase() === 'KGS') {
+    // For PCS, we assume there's a single price for each piece
+    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+      throw new Error("Invalid product pricing for PCS");
+    }
+
+    price = parseFloat(inventoryItem.onlineStorePrice);
+    mrp = parseFloat(inventoryItem.compareAt) || 0; 
+    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+    subtotal = parseFloat((price * quantity).toFixed(2));
+
+
+  } else if (product.unit.toUpperCase() === 'LITRE') {
+    // For PCS, we assume there's a single price for each piece
+    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+      throw new Error("Invalid product pricing for PCS");
+    }
+
+    price = parseFloat(inventoryItem.onlineStorePrice);
+    mrp = parseFloat(inventoryItem.compareAt) || 0;
+    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
+    subtotal = parseFloat((price * quantity).toFixed(2));
+
+
+  }
+   else if (product.unit.toUpperCase() === 'GRAMS') {
     // For KG, find the appropriate unit price based on quantityUnits
     console.log("Inventory")
     console.log(inventoryItem.unitPrices)

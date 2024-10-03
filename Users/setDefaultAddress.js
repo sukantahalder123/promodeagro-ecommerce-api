@@ -23,7 +23,7 @@ async function checkUserExists(userId) {
 // Function to check if address exists for a user
 async function checkAddressExists(userId, addressId) {
     const params = {
-        TableName: 'Addresses', // Replace with your actual Addresses table name
+        TableName: process.env.ADDRESS_TABLE, // Replace with your actual Addresses table name
         Key: {
             userId: userId,
             addressId: addressId,
@@ -53,6 +53,8 @@ exports.handler = async (event) => {
         // Check if user exists
         const userExists = await checkUserExists(userId);
 
+        console.log(userExists)
+
         if (!userExists) {
             return {
                 statusCode: 404,
@@ -62,6 +64,9 @@ exports.handler = async (event) => {
 
         // Check if address exists for the user
         const addressExists = await checkAddressExists(userId, addressId);
+
+
+        console.log(addressExists)
 
         if (!addressExists) {
             return {
@@ -83,6 +88,7 @@ exports.handler = async (event) => {
             ReturnValues: 'UPDATED_NEW',
         };
 
+        console.log(updateParams)
         await docClient.update(updateParams).promise();
 
         return {

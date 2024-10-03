@@ -7,7 +7,7 @@ const dynamoDB = new DynamoDBClient({
 });
 
 const tableName = process.env.ORDER_TABLE;
-const indexName = 'userId-index'; // Replace with your actual index name
+const indexName = 'userIdIndex'; // Replace with your actual index name
 
 module.exports.handler = async (event) => {
     try {

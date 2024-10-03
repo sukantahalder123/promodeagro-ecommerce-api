@@ -1,10 +1,11 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
 
 // Function to check if user exists
 async function checkUserExists(userId) {
     const params = {
-        TableName: 'Users', // Replace with your actual Users table name
+        TableName: process.env.USERS_TABLE, // Replace with your actual Users table name
         Key: {
             UserId: userId,
         },
@@ -41,7 +42,7 @@ exports.handler = async (event) => {
         }
 
         const params = {
-            TableName: 'Addresses',
+            TableName: process.env.ADDRESS_TABLE,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId

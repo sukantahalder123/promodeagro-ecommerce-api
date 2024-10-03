@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
-const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
+const dynamoDB = new DynamoDBClient();
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 require('dotenv').config();
@@ -15,7 +15,11 @@ async function getProductDetails(productId) {
         },
     };
 
+
     try {
+
+        console.log(params)
+
         const data = await docClient.get(params).promise();
         return data.Item;
     } catch (error) {
@@ -27,13 +31,14 @@ async function getProductDetails(productId) {
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
     };
 
     try {
+        console.log(params)
         const data = await docClient.get(params).promise();
         return data.Item;
     } catch (error) {
@@ -162,7 +167,7 @@ exports.handler = async (event) => {
 
         // Prepare the item to be stored in the CartItems table
         const params = {
-            TableName: 'CartItems',
+            TableName: process.env.CART_TABLE,
             Item: {
                 UserId: userId,
                 productName: product.name,
@@ -178,6 +183,8 @@ exports.handler = async (event) => {
                 Mrp: mrp
             },
         };
+
+        console.log(params)
 
         await docClient.put(params).promise();
 

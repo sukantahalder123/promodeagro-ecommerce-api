@@ -55,7 +55,7 @@ exports.handler = async (event) => {
       if (inventoryItem) {
         if (inventoryItem.unitPrices) {
           product.price = inventoryItem.unitPrices[0].price || 0;
-          product.mrp = inventoryItem.unitPrices[0].mrp || 0;
+          product.mrp = inventoryItem.unitPrices[0].discountedPrice || 0;
           product.unitPrices = inventoryItem.unitPrices || [];
         } else {
           product.price = inventoryItem.onlineStorePrice || 0;
@@ -77,7 +77,7 @@ exports.handler = async (event) => {
 
         // Set default selectedQuantityUnitPrice and mrp
         product.selectedQuantityUnitPrice = product.unitPrices[0].price || 0;
-        product.mrp = product.unitPrices[0].mrp || 0;
+        product.mrp = product.unitPrices[0].discountedPrice || 0;
       } else {
         product.selectedQuantityUnitPrice = 0;
         product.mrp = 0;
@@ -87,7 +87,7 @@ exports.handler = async (event) => {
     if (userId) {
       // Fetch cart items for the user
       const cartParams = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
           ':userId': userId
@@ -99,7 +99,7 @@ exports.handler = async (event) => {
 
       // Fetch wishlist items for the user
       const wishlistParams = {
-        TableName: 'ProductWishLists',
+        TableName: process.env.WISHLIST_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
           ':userId': userId
@@ -116,6 +116,7 @@ exports.handler = async (event) => {
 
         if (cartItem) {
           product.inCart = true;
+          product.savingsPercentage= product.savingsPercentage || 0,
           product.cartItem = {
             ...cartItem,
             selectedQuantityUnit: cartItem.QuantityUnits,
@@ -123,6 +124,8 @@ exports.handler = async (event) => {
           };
         } else {
           product.inCart = false;
+          product.savingsPercentage= product.savingsPercentage || 0,
+
           product.cartItem = {
             ProductId: product.id,
             UserId: userId,
@@ -141,6 +144,8 @@ exports.handler = async (event) => {
       });
     } else {
       products.forEach(product => {
+        product.savingsPercentage= product.savingsPercentage || 0,
+
         product.inCart = false;
         product.inWishlist = false;
         product.cartItem = {

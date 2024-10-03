@@ -49,7 +49,7 @@ async function getInventoryDetails(productId) {
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -67,7 +67,7 @@ async function getUserDetails(userId) {
 // Function to get wishlist items for the user
 async function getWishlistItems(userId) {
     const params = {
-        TableName: 'ProductWishLists',
+        TableName: process.env.WISHLIST_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
             ':userId': userId,
@@ -86,7 +86,7 @@ async function getWishlistItems(userId) {
 // Function to get cart items for the user
 async function getCartItems(userId) {
     const params = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
             ':userId': userId,

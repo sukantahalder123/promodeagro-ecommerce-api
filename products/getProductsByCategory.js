@@ -23,7 +23,7 @@ exports.handler = async (event) => {
     // Fetch total item count for the category
     const countParams = {
       TableName: process.env.PRODUCTS_TABLE,
-      IndexName: 'category-index',
+      IndexName: 'categoryIndex',
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
         ':category': category.toLowerCase(),
@@ -37,7 +37,7 @@ exports.handler = async (event) => {
     // Fetch paginated products
     const params = {
       TableName: process.env.PRODUCTS_TABLE,
-      IndexName: 'category-index', // Ensure an index on the 'Category' attribute exists
+      IndexName: 'categoryIndex', // Ensure an index on the 'Category' attribute exists
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
         ':category': category.toLowerCase(),
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
 
     const totalProductsparam = {
       TableName: process.env.PRODUCTS_TABLE,
-      IndexName: 'category-index', // Ensure an index on the 'Category' attribute exists
+      IndexName: 'categoryIndex', // Ensure an index on the 'Category' attribute exists
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
         ':category': category.toLowerCase(),
@@ -81,7 +81,7 @@ exports.handler = async (event) => {
     if (userId) {
       // Fetch cart items for the user
       const cartParams = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
           ':userId': userId
@@ -93,7 +93,7 @@ exports.handler = async (event) => {
 
       // Fetch wishlist items for the user
       const wishlistParams = {
-        TableName: 'ProductWishLists',
+        TableName: process.env.WISHLIST_TABLE,
         KeyConditionExpression: 'UserId = :userId',
         ExpressionAttributeValues: {
           ':userId': userId
@@ -139,6 +139,8 @@ exports.handler = async (event) => {
         product.inWishlist = false;
         product.cartItem = {
           ProductId: product.id,
+          savingsPercentage: product.savingsPercentage || 0,
+
           UserId: 'defaultUserId',
           Savings: 0,
           QuantityUnits: 0,

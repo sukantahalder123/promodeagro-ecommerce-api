@@ -4,8 +4,8 @@ require('dotenv').config();
 
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 
-const SALES_TABLE_NAME = "sales";
-const ORDERS_TABLE_NAME = "Orders";
+const SALES_TABLE_NAME = process.env.SALE_TABLE;
+const ORDERS_TABLE_NAME = process.env.ORDER_TABLE;
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE;
 const dynamoDB = new DynamoDBClient({});
 

@@ -23,7 +23,7 @@ async function getProductDetails(productId) {
 // Function to check if the user exists
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -75,7 +75,7 @@ async function deleteItemFromTable(tableName, key) {
 // Function to add an item to the CartItems table
 async function addItemToCart(userId, product, saveForLaterItem) {
     const params = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         Item: {
             UserId: userId,
             ProductId: product.id,

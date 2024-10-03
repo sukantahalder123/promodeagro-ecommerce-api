@@ -5,7 +5,7 @@ frameworkVersion: "3"
 provider:
   name: aws
   stage: prod
-  region: us-east-1
+  region: ap-south-1
   runtime: nodejs18.x
   role: arn:aws:iam::851725323791:role/ecommerce_Lambda_Role
   versionFunctions: false
@@ -26,6 +26,16 @@ provider:
         - POST
         - PUT
         - DELETE
+
+custom:
+  # customDomain:
+  #   domainName: api.b2c.promodeagro.com
+  #   basePath: project1
+  #   stage: ${self:provider.stage}
+  #   createRoute53Record: true
+
+  serverless-offline:
+    httpPort: 4000
 
 functions:
   - ${file(products/function.yml)}
@@ -52,14 +62,10 @@ functions:
   - ${file(payment/function.yml)}
 
 
-
-
-
-
-
-
   # - ${file(webhooks/function.yml)}
 plugins:
+  # - serverless-domain-manager
+
   - serverless-offline
 #   - serverless-esbuild
 
@@ -83,6 +89,3 @@ plugins:
 
 # useDotenv: true
 
-custom:
-  serverless-offline:
-    httpPort: 4000

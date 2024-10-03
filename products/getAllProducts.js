@@ -310,6 +310,7 @@ module.exports.handler = async (event) => {
     };
 
     const productsData = await dynamoDB.send(new ScanCommand(scanParams));
+    console.log(scanParams)
     
     if (!productsData.Items || productsData.Items.length === 0) {
       return {
@@ -320,6 +321,7 @@ module.exports.handler = async (event) => {
 
     let products = productsData.Items.map(item => unmarshall(item));
 
+    // console.log(products)
     // Calculate total items and total pages
     const totalItems = products.length;
     const totalPages = Math.ceil(totalItems / pageSize);
@@ -404,12 +406,14 @@ async function getProductsWithCartInfo(products, userId) {
           Price: inventoryItem.onlineStorePrice || 0,
           Mrp: inventoryItem.compareAt || 0,
           Quantity: 0,
+
           productImage: product.image || "",
           productName: product.name || "",
         };
 
         return {
           unit: product.unit,
+          savingsPercentage: product.savingsPercentage ||0,
           image: product.image,
           category: product.category,
           images: product.images,
@@ -419,7 +423,7 @@ async function getProductsWithCartInfo(products, userId) {
           availability: product.availability,
           price: inventoryItem.unitPrices[0].price || 0,
           unitPrices: inventoryItem.unitPrices,
-          mrp: inventoryItem.unitPrices[0].mrp || 0,
+          mrp: inventoryItem.unitPrices[0].discountedPrice || 0,
           inCart: false,
           inWishlist: false,
           cartItem: defaultCartItem,
@@ -436,7 +440,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
   try {
     // Fetch cart items for the user
     const getCartItemsParams = {
-      TableName: 'CartItems',
+      TableName: process.env.CART_TABLE,
       KeyConditionExpression: 'UserId = :userId',
       ExpressionAttributeValues: {
         ':userId': { S: userId },
@@ -455,7 +459,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
 
     // Fetch wishlist items for the user
     const getWishlistItemsParams = {
-      TableName: 'ProductWishLists',
+      TableName: process.env.WISHLIST_TABLE,
       KeyConditionExpression: 'UserId = :userId',
       ExpressionAttributeValues: {
         ':userId': { S: userId },
@@ -512,6 +516,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
 
         return {
           unit: product.unit,
+          savingsPercentage: product.savingsPercentage ||0,
           image: product.image,
           category: product.category,
           images: product.images,
@@ -521,7 +526,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
           availability: product.availability,
           price: inventoryItem.unitPrices[0].price || 0,
           unitPrices: inventoryItem.unitPrices,
-          mrp: inventoryItem.unitPrices[0].mrp || 0,
+          mrp: inventoryItem.unitPrices[0].discountedPrice || 0,
           inCart: cartItemsMap.has(productId),
           inWishlist: wishlistItemsSet.has(productId),
           cartItem,
@@ -532,7 +537,10 @@ async function fetchCartAndWishlistInfo(products, userId) {
       }
     }));
   } catch (error) {
-    console.error("Error fetching cart and wishlist data:", error);
-    throw new Error("Failed to fetch cart and wishlist data");
+    console.error('Error fetching products:', error);
+    return {
+      statusCode: 200, // Return 200 status code even on error
+      body: JSON.stringify({ message: 'Failed to fetch products, default response.', error: error.message }),
+    };
   }
 }

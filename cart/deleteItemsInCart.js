@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
 
 exports.handler = async (event) => {
     const { userId, productId } = JSON.parse(event.body);
@@ -12,7 +13,7 @@ exports.handler = async (event) => {
     }
 
     const params = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         Key: {
             'UserId': userId,
             'ProductId': productId

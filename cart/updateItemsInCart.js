@@ -28,7 +28,7 @@ async function getProductDetails(productId) {
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -108,7 +108,35 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
             savings = ((mrp - price) * quantity).toFixed(2);
             subtotal = (price * quantity).toFixed(2);
 
-        } else {
+        } else if (product.unit.toUpperCase() === 'KGS') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = inventoryItem.onlineStorePrice;
+            mrp = inventoryItem.compareAt;
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        }  else if (product.unit.toUpperCase() === 'LITRE') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = inventoryItem.onlineStorePrice;
+            mrp = inventoryItem.compareAt;
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        }  else {
             return {
                 statusCode: 400,
                 body: JSON.stringify({ message: "Invalid product unit" }),
@@ -117,7 +145,7 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
 
         // Prepare the item update parameters for DynamoDB
         const params = {
-            TableName: 'CartItems',
+            TableName: process.env.CART_TABLE,
             Key: {
                 'UserId': userId,
                 'ProductId': productId

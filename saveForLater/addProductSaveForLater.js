@@ -23,7 +23,7 @@ async function getProductDetails(productId) {
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -41,7 +41,7 @@ async function getUserDetails(userId) {
 // Function to check if the cart item exists
 async function getCartItem(userId, productId) {
     const params = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         Key: {
             UserId: userId,
             ProductId: productId
@@ -101,7 +101,7 @@ exports.handler = async (event) => {
 
         // Add to Save For Later
         const params = {
-            TableName: 'SaveForLater',
+            TableName: process.env.SAVELATER_TABLE,
             Item: {
                 userId: userId,
                 productId: productId,
@@ -121,7 +121,7 @@ exports.handler = async (event) => {
 
 
         const params2 = {
-            TableName: 'ProductWishLists',
+            TableName: process.env.WISHLIST_TABLE,
             Item: {
                 UserId: userId,
                 ProductId: productId,
@@ -140,7 +140,7 @@ exports.handler = async (event) => {
 
         // Remove from Cart
         const removeParams = {
-            TableName: 'CartItems',
+            TableName: process.env.CART_TABLE,
             Key: {
                 UserId: userId,
                 ProductId: productId

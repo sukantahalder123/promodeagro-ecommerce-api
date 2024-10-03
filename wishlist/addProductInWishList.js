@@ -23,7 +23,7 @@ async function getProductDetails(productId) {
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId,
         },
@@ -69,7 +69,7 @@ exports.handler = async (event) => {
         }
 
         const params = {
-            TableName: 'ProductWishLists',
+            TableName: process.env.WISHLIST_TABLE,
             Item: {
                 UserId: userId,
                 ProductId: productId,

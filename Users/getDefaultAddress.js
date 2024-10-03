@@ -61,7 +61,7 @@ exports.handler = async (event) => {
 
         // Fetch the default address details
         const addressParams = {
-            TableName: 'Addresses', // Replace with your actual Addresses table name
+            TableName: process.env.ADDRESS_TABLE, // Replace with your actual Addresses table name
             Key: {
                 userId: userId,
                 addressId: data.Item.defaultAddressId,

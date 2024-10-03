@@ -50,7 +50,7 @@ module.exports.getProductById = async (event) => {
 
     var product = productData.Item;
     product.price = inventoryItem.unitPrices[0].price;
-    product.mrp = inventoryItem.unitPrices[0].mrp;
+    product.mrp = inventoryItem.unitPrices[0].discountedPrice;
     product.unitPrices = inventoryItem.unitPrices;
 
 
@@ -73,6 +73,7 @@ module.exports.getProductById = async (event) => {
       // Initialize default cart item
       const defaultCartItem = {
         ProductId: productId,
+        savingsPercentage: product.savingsPercentage || 0,
         UserId: userId,
         Savings: 0,
         QuantityUnits: 0,
@@ -86,7 +87,7 @@ module.exports.getProductById = async (event) => {
 
       // Check if the product exists in the user's cart
       const cartParams = {
-        TableName: 'CartItems',
+        TableName: process.env.CART_TABLE,
         Key: {
           'UserId': userId,
           'ProductId': productId
@@ -96,7 +97,7 @@ module.exports.getProductById = async (event) => {
 
       // Check if the product exists in the user's wishlist
       const wishlistParams = {
-        TableName: 'ProductWishLists',
+        TableName: process.env.WISHLIST_TABLE,
         Key: {
           'UserId': userId,
           'ProductId': productId

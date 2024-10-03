@@ -21,7 +21,7 @@ exports.handler = async (event) => {
         // Fetch total item count for the subcategory
         const countParams = {
             TableName: process.env.PRODUCTS_TABLE,
-            IndexName: 'subCategory-index',
+            IndexName: 'subCategoryIndex',
             KeyConditionExpression: 'subCategory = :subcategory',
             ExpressionAttributeValues: {
                 ':subcategory': subcategory, // Define subcategory correctly\
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
         // Fetch paginated products
         const params = {
             TableName: process.env.PRODUCTS_TABLE,
-            IndexName: 'subCategory-index',
+            IndexName: 'subCategoryIndex',
             KeyConditionExpression: 'subCategory = :subcategory',  // Using subCategory as partition key
             ExpressionAttributeValues: {
                 ':subcategory': subcategory,
@@ -74,7 +74,7 @@ exports.handler = async (event) => {
             // If inventory data exists, update the product with price, mrp, and unitPrices
             if (inventoryItem) {
                 product.price = inventoryItem.unitPrices[0].price || 0;
-                product.mrp = inventoryItem.unitPrices[0].mrp || 0;
+                product.mrp = inventoryItem.unitPrices[0].discountedPrice || 0;
                 product.unitPrices = inventoryItem.unitPrices || [];
             }
 
@@ -90,7 +90,7 @@ exports.handler = async (event) => {
         if (userId) {
             // Fetch cart items for the user
             const cartParams = {
-                TableName: 'CartItems',
+                TableName: process.env.CART_TABLE,
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
                     ':userId': userId,
@@ -102,7 +102,7 @@ exports.handler = async (event) => {
 
             // Fetch wishlist items for the user
             const wishlistParams = {
-                TableName: 'ProductWishLists',
+                TableName: process.env.WISHLIST_TABLE,
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
                     ':userId': userId,
@@ -126,6 +126,7 @@ exports.handler = async (event) => {
                     };
                 } else {
                     product.inCart = false;
+                    product.savingsPercentage = product.savingsPercentage || 0,
                     product.cartItem = {
                         ProductId: product.id,
                         UserId: userId,
@@ -145,6 +146,7 @@ exports.handler = async (event) => {
         } else {
             products.forEach(product => {
                 product.inCart = false;
+                product.savingsPercentage = product.savingsPercentage || 0
                 product.inWishlist = false;
                 product.cartItem = {
                     ProductId: product.id,

@@ -1,10 +1,11 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
 
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
     const params = {
-        TableName: 'Users',
+        TableName: process.env.USERS_TABLE,
         Key: {
             UserId: userId, // Assuming 'id' is the primary key for the Users table
         },
@@ -41,7 +42,7 @@ exports.handler = async (event) => {
         }
 
         const params = {
-            TableName: 'CartItems',
+            TableName: process.env.CART_TABLE,
             KeyConditionExpression: 'UserId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId

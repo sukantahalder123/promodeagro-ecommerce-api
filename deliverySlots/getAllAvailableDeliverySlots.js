@@ -1,5 +1,7 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
+
 
 module.exports.handler = async (event) => {
     const day = event.queryStringParameters.day;
@@ -23,7 +25,7 @@ module.exports.handler = async (event) => {
     }
 
     const params = {
-        TableName: 'DeliveryTimeSlots',
+        TableName: process.env.DELIVERY_SLOT_TABLE,
         FilterExpression: '#date = :date AND available = :available AND currentOrders < maxOrders',
         ExpressionAttributeNames: {
             '#date': 'date',

@@ -6,11 +6,11 @@ const AWS = require('aws-sdk');
 const axios = require('axios');
 
 
-AWS.config.update({ region: 'us-east-1' }); // Replace with your desired region
+AWS.config.update({ region: 'ap-south-1' }); // Replace with your desired region
 
 const stepfunctions = new AWS.StepFunctions();
 
-const orderProcessSFArn = 'arn:aws:states:us-east-1:851725323791:stateMachine:OrderTrackingStateMachine-prod';
+const orderProcessSFArn = 'arn:aws:states:ap-south-1:851725323791:stateMachine:OrderTrackingStateMachine-prod';
 
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
@@ -63,7 +63,11 @@ async function getUserDetails(userId) {
 async function getAddressDetails(userId, addressId) {
   const getAddressParams = {
     TableName: addressTableName,
-    Key: marshall({ userId: userId, addressId: addressId }) // Ensure this matches your table's key schema
+    Key: marshall({
+      userId: userId,
+
+      addressId: addressId
+    }) // Ensure this matches your table's key schema
   };
 
   try {
@@ -120,14 +124,14 @@ async function getProductDetails(productId, quantity, quantityUnits) {
     subtotal = parseFloat((price * quantity).toFixed(2));
 
 
-  }else if (product.unit.toUpperCase() === 'KGS') {
+  } else if (product.unit.toUpperCase() === 'KGS') {
     // For PCS, we assume there's a single price for each piece
     if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
       throw new Error("Invalid product pricing for PCS");
     }
 
     price = parseFloat(inventoryItem.onlineStorePrice);
-    mrp = parseFloat(inventoryItem.compareAt) || 0; 
+    mrp = parseFloat(inventoryItem.compareAt) || 0;
     savings = parseFloat(((mrp - price) * quantity).toFixed(2));
     subtotal = parseFloat((price * quantity).toFixed(2));
 
@@ -145,7 +149,7 @@ async function getProductDetails(productId, quantity, quantityUnits) {
 
 
   }
-   else if (product.unit.toUpperCase() === 'GRAMS') {
+  else if (product.unit.toUpperCase() === 'GRAMS') {
     // For KG, find the appropriate unit price based on quantityUnits
     console.log("Inventory")
     console.log(inventoryItem.unitPrices)
@@ -256,7 +260,7 @@ module.exports.handler = async (event) => {
       orderItems.push({
         productId: item.productId,
         productName: product.name,
-        unit:product.unit,
+        unit: product.unit,
         quantity: item.quantity,
         quantityUnits: item.quantityUnits,
         price: price,
@@ -291,7 +295,7 @@ module.exports.handler = async (event) => {
     const bill = await generateBillImage(orderItems)
     console.log(bill)
 
-     await shareBillOnWhatsaap(bill,addressDetails.name,addressDetails.phoneNumber)
+    await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
     //  await sendBill(addressDetails.phoneNumber, process.env.FACEBOOK_ACCESS_TOKEN, orderItems)
 
     console.log(paymentDetails);

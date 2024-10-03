@@ -13,7 +13,7 @@ module.exports.handler = async (event) => {
 
         // Define the params for the GetItem operation
         const params = {
-            TableName: 'Order-hxojpgz675cmbad5uyoeynwh54-dev',
+            TableName: process.env.ORDER_TABLE,
             Key: {
                 'OrderId': { S: OrderId }
             }

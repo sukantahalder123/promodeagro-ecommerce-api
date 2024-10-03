@@ -67,7 +67,7 @@ exports.handler = async (event) => {
 
         // Create the new address
         const addressParams = {
-            TableName: 'Addresses',
+            TableName: process.env.ADDRESS_TABLE,
             Item: {
                 userId: userId,
                 addressId: addressId,

@@ -59,7 +59,7 @@ exports.handler = async (event) => {
         updateExpression = updateExpression.slice(0, -2);
 
         const params = {
-            TableName: 'Addresses',
+            TableName: process.env.ADDRESS_TABLE,
             Key: {
                 userId: userId,
                 addressId: addressId,

@@ -33,7 +33,7 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Error fetching top-selling subcategories:', error);
         return {
-            statusCode: 500,
+            statusCode: 200,
             body: JSON.stringify({ message: 'Failed to fetch data', error }),
         };
     }

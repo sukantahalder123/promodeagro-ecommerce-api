@@ -419,7 +419,7 @@ exports.handler = async (event) => {
         try {
             // Fetch cart items
             const cartParams = {
-                TableName: 'CartItems',
+                TableName: process.env.CART_TABLE,
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
                     ':userId': userId
@@ -430,7 +430,7 @@ exports.handler = async (event) => {
 
             // Fetch wishlist items
             const wishlistParams = {
-                TableName: 'ProductWishLists',
+                TableName: process.env.WISHLIST_TABLE,
                 KeyConditionExpression: 'UserId = :userId',
                 ExpressionAttributeValues: {
                     ':userId': userId
@@ -447,6 +447,8 @@ exports.handler = async (event) => {
 
                 product.inCart = !!cartItem;
                 product.inWishlist = inWishlist;
+                product.savingsPercentage=product.savingsPercentage || 0,
+
 
                 product.cartItem = cartItem || {
                     ProductId: product.id,
@@ -510,7 +512,7 @@ exports.handler = async (event) => {
         products: paginatedProducts.map(product => ({
             ...product,
             unitPrices: product.unitPrices.map(unitPrice => ({
-                mrp: unitPrice.mrp,
+                mrp: unitPrice.discountedPrice,
                 price: unitPrice.price,
                 savings: unitPrice.savings,
                 qty: unitPrice.qty,

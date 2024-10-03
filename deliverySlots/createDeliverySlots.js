@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const crypto = require('crypto');
 const docClient = new AWS.DynamoDB.DocumentClient();
+require('dotenv').config();
+
 
 module.exports.handler = async (event) => {
     const { startTime, endTime, maxOrders, year, month } = JSON.parse(event.body);
@@ -38,7 +40,7 @@ module.exports.handler = async (event) => {
 const createSlot = async (date, startTime, endTime, maxOrders) => {
     const slotId = crypto.randomUUID();
     const params = {
-        TableName: 'DeliveryTimeSlots',
+        TableName: process.env.DELIVERY_SLOT_TABLE,
         Item: {
             slotId: slotId,
             date: date,

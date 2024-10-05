@@ -6,10 +6,10 @@ require('dotenv').config();
 
 const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-const SALES_TABLE_NAME = process.env.SALES_TABLE || "sales";
-const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE || "Products";
-const CART_ITEMS_TABLE_NAME = process.env.CART_ITEMS_TABLE || "CartItems";
-const WISHLIST_ITEMS_TABLE_NAME = process.env.WISHLIST_ITEMS_TABLE || "ProductWishLists";
+const SALES_TABLE_NAME = process.env.SALE_TABLE;
+const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE;
+const CART_ITEMS_TABLE_NAME = process.env.CART_TABLE ;
+const WISHLIST_ITEMS_TABLE_NAME = process.env.WISHLIST_TABLE;
 
 exports.handler = async (event) => {
     try {

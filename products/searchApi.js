@@ -314,7 +314,6 @@
 //         };
 //     }
 // };
-
 'use strict';
 
 const AWS = require('@aws-sdk/client-dynamodb');
@@ -377,32 +376,37 @@ exports.handler = async (event) => {
         };
     }
 
-    // Step 4: Query the Products table to fetch product details for matching productIds
-    const productsParams = {
-        TableName: process.env.PRODUCTS_TABLE,
-        ProjectionExpression: 'id, #name, category, subcategory, savingsPercentage, image, description, #unit',
-        ExpressionAttributeNames: {
-            '#name': 'name',
-            '#unit': 'unit', // Map 'unit' to a placeholder
-        },
-        FilterExpression: 'id IN (' + productIds.map((_, index) => `:productId${index}`).join(', ') + ')',
-        ExpressionAttributeValues: Object.fromEntries(
-            productIds.map((id, index) => [`:productId${index}`, id])
-        ),
-    };
+    // Step 4: Split productIds into batches of 100 and fetch product details
+    const batchSize = 100;
+    let products = [];
 
-    let productsData;
-    try {
-        productsData = await docClient.send(new ScanCommand(productsParams));
-    } catch (error) {
-        console.error('Error fetching products:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to fetch products' }),
+    for (let i = 0; i < productIds.length; i += batchSize) {
+        const batchIds = productIds.slice(i, i + batchSize);
+
+        const productsParams = {
+            TableName: process.env.PRODUCTS_TABLE,
+            ProjectionExpression: 'id, #name, category, subcategory, savingsPercentage, image, description, #unit',
+            ExpressionAttributeNames: {
+                '#name': 'name',
+                '#unit': 'unit', // Map 'unit' to a placeholder
+            },
+            FilterExpression: 'id IN (' + batchIds.map((_, index) => `:productId${index}`).join(', ') + ')',
+            ExpressionAttributeValues: Object.fromEntries(
+                batchIds.map((id, index) => [`:productId${index}`, id])
+            ),
         };
-    }
 
-    let products = productsData.Items || [];
+        try {
+            const productsData = await docClient.send(new ScanCommand(productsParams));
+            products = products.concat(productsData.Items || []);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'Failed to fetch products' }),
+            };
+        }
+    }
 
     // Step 5: Join inventory price data with products
     products = products.map(product => {
@@ -447,8 +451,7 @@ exports.handler = async (event) => {
 
                 product.inCart = !!cartItem;
                 product.inWishlist = inWishlist;
-                product.savingsPercentage=product.savingsPercentage || 0,
-
+                product.savingsPercentage = product.savingsPercentage || 0,
 
                 product.cartItem = cartItem || {
                     ProductId: product.id,

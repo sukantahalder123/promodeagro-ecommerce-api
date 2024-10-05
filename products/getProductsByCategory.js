@@ -19,14 +19,15 @@ exports.handler = async (event) => {
 
   try {
 
-    console.log(category.toLowerCase())
+    // console.log(category.toLowerCase());
+    
     // Fetch total item count for the category
     const countParams = {
       TableName: process.env.PRODUCTS_TABLE,
       IndexName: 'categoryIndex',
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
-        ':category': category.toLowerCase(),
+        ':category': category,
       },
       Select: 'COUNT',
     };
@@ -39,29 +40,26 @@ exports.handler = async (event) => {
       TableName: process.env.PRODUCTS_TABLE,
       IndexName: 'categoryIndex', // Ensure an index on the 'Category' attribute exists
       KeyConditionExpression: 'category = :category',
-      ExpressionAttributeValues: {
-        ':category': category.toLowerCase(),
-      },
-      Limit: parseInt(pageSize),
-      ExclusiveStartKey: decodedExclusiveStartKey,
       FilterExpression: '#availability = :trueValue',
       ExpressionAttributeNames: {
         '#availability': 'availability',
       },
       ExpressionAttributeValues: {
-        ':trueValue': { BOOL: true }, // Adjust this according to the AWS SDK v3 format
+        ':category': category,
+        ':trueValue': true, // Merged availability filter
       },
+      Limit: parseInt(pageSize),
+      ExclusiveStartKey: decodedExclusiveStartKey,
     };
-
 
     const totalProductsparam = {
       TableName: process.env.PRODUCTS_TABLE,
-      IndexName: 'categoryIndex', // Ensure an index on the 'Category' attribute exists
+      IndexName: 'categoryIndex',
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
-        ':category': category.toLowerCase(),
+        ':category': category,
       },
-      };
+    };
 
     const data = await docClient.query(params).promise();
     const TotalProducts = await docClient.query(totalProductsparam).promise();
@@ -140,7 +138,6 @@ exports.handler = async (event) => {
         product.cartItem = {
           ProductId: product.id,
           savingsPercentage: product.savingsPercentage || 0,
-
           UserId: 'defaultUserId',
           Savings: 0,
           QuantityUnits: 0,
@@ -168,7 +165,6 @@ exports.handler = async (event) => {
         totalPages: totalPages,
         nextPage: encodedLastEvaluatedKey ? parseInt(pageNumber) + 1 : null,
         lastEvaluatedKey: encodedLastEvaluatedKey,
-        // currentTotalProducts:products.length,
         TotalProducts: TotalProducts.Items.length
       },
     };

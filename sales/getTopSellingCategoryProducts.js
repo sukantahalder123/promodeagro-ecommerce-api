@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-const SALES_TABLE_NAME = process.env.SALES_TABLE || "sales";
+const SALES_TABLE_NAME = process.env.SALE_TABLE;
 
 exports.handler = async (event) => {
     try {

@@ -143,7 +143,7 @@ exports.handler = async (event) => {
             subtotal = parseFloat((price * quantity).toFixed(2));
 
         }
-        else if (product.unit.toUpperCase() === 'LITRE') {
+        else if (product.unit.toUpperCase() === 'LITRES') {
             // For PCS, we assume there's a single price for each piece
             if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
                 return {

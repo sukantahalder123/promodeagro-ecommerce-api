@@ -126,3 +126,12 @@ createUserAndAddress:
     - httpApi:
         path: /createUserAndAddress
         method: post
+
+
+
+createUserInWhatsappCommerce:
+  handler: Users/createUserInWhatsaapCommerce.handler
+  events:
+    - httpApi:
+        path: /createUserInWhatsaapCommerce
+        method: post

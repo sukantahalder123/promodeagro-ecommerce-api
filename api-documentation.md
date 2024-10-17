@@ -213,10 +213,24 @@ The request body should be a JSON object with the following fields:
 
 ```json
 {
-    "userId": "string",
-    "productId": "string",
-    "quantity": 'int',
-    "quantityUnits": 'int'
+    "userId": "854f5788-4bb5-4714-b47f-67d9173b0c63",
+    "cartItems": [
+        {
+            "productId": "800edc08-644e-4abd-97a5-d8095a431ce1",
+            "quantity": 1,
+            "quantityUnits":1
+        },
+        {
+            "productId": "1df198ce-a25f-4bf3-83e6-942fdf09d3fc",
+            "quantity": 1,
+            "quantityUnits": 1
+        },
+        {
+            "productId": "c96cfa0b-154b-449a-b0e8-cca5ca97a568",
+            "quantity": 1,
+            "quantityUnits": 250
+        }
+    ]
 }
 
 ```
@@ -242,13 +256,27 @@ Updates the quantity of an item in the user's cart .
 The request body should be a JSON object with the following fields:
 
 ```json
-{
-    "userId": "string",
-    "productId": "string",
-    "quantity": 'int',
-    "quantityUnits": 'int'
-}
 
+     {
+    "userId": "854f5788-4bb5-4714-b47f-67d9173b0c63",
+    "cartItems": [
+        {
+            "productId": "800edc08-644e-4abd-97a5-d8095a431ce1",
+            "quantity": 3,
+            "quantityUnits":1
+        },
+        {
+            "productId": "1df198ce-a25f-4bf3-83e6-942fdf09d3fc",
+            "quantity": 2,
+            "quantityUnits": 1
+        },
+        {
+            "productId": "c96cfa0b-154b-449a-b0e8-cca5ca97a568",
+            "quantity": 5,
+            "quantityUnits": 250
+        }
+    ]
+}
 ```
 
 ## API Endpoint: Delete Cart Item

@@ -27,3 +27,17 @@ deleteItemsInCart:
           path: /cart/deleteItem
           method: delete
 
+
+addListOfItemsInCart:
+    handler: cart/addListItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/addListOfItems
+          method: post
+
+updateListOfItemsInCart:
+    handler: cart/updateListOfItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/updateListOfItems
+          method: put

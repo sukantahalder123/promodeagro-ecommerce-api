@@ -1,9 +1,11 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 require('dotenv').config();
-const { DynamoDBClient, QueryCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
+
+
 
 // Function to fetch product details from DynamoDB
 async function getProductDetails(productId) {
@@ -44,44 +46,110 @@ async function getUserDetails(userId) {
 // Function to update an existing cart item in DynamoDB
 async function updateCartItem(userId, productId, quantity, quantityUnits) {
     try {
+        // Fetch product details
         const product = await getProductDetails(productId);
 
         if (!product) {
-            return { statusCode: 404, message: "Product not found" };
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: "Product not found" }),
+            };
         }
 
         let price, mrp, savings, subtotal;
+
         const InventoryParams = {
             TableName: process.env.INVENTORY_TABLE,
-            IndexName: "productIdIndex",
+            IndexName: "productIdIndex", // Replace with your actual GSI name
             KeyConditionExpression: "productId = :productId",
-            ExpressionAttributeValues: { ":productId": { S: productId } },
+            ExpressionAttributeValues: {
+                ":productId": { S: productId },
+            },
         };
+
 
         const inventoryData = await dynamoDB.send(new QueryCommand(InventoryParams));
         const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
 
-        // Pricing logic based on product.unit
+
         if (product.unit.toUpperCase() === 'GRAMS') {
-            let unitPrice = inventoryItem.unitPrices.find(item => item.qty === quantityUnits);
-            if (!unitPrice) {
-                return { statusCode: 400, message: "Invalid quantity units for GRAMS" };
+            // Find the appropriate unit price based on quantityUnits for KG
+            let unitPrice = null;
+            for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
+                if (quantityUnits === inventoryItem.unitPrices[i].qty) {
+                    unitPrice = inventoryItem.unitPrices[i];
+                    break;
+                }
             }
+
+            if (!unitPrice) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid quantity units for GRAMS" }),
+                };
+            }
+
             price = unitPrice.price;
             mrp = unitPrice.mrp;
-        } else if (['PIECES', 'KGS', 'LITRES'].includes(product.unit.toUpperCase())) {
+            savings = (unitPrice.savings * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        } else if (product.unit.toUpperCase() === 'PIECES') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
             price = inventoryItem.onlineStorePrice;
             mrp = inventoryItem.compareAt;
-        } else {
-            return { statusCode: 400, message: "Invalid product unit" };
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        } else if (product.unit.toUpperCase() === 'KGS') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = inventoryItem.onlineStorePrice;
+            mrp = inventoryItem.compareAt;
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        }  else if (product.unit.toUpperCase() === 'LITRES') {
+            // For PCS, we assume there's a single price for each piece
+            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
+                };
+            }
+
+            price = inventoryItem.onlineStorePrice;
+            mrp = inventoryItem.compareAt;
+            savings = ((mrp - price) * quantity).toFixed(2);
+            subtotal = (price * quantity).toFixed(2);
+
+        }  else {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: "Invalid product unit" }),
+            };
         }
 
-        savings = ((mrp - price) * quantity).toFixed(2);
-        subtotal = (price * quantity).toFixed(2);
-
+        // Prepare the item update parameters for DynamoDB
         const params = {
             TableName: process.env.CART_TABLE,
-            Key: { 'UserId': userId, 'ProductId': productId },
+            Key: {
+                'UserId': userId,
+                'ProductId': productId
+            },
             UpdateExpression: 'SET Quantity = :quantity, QuantityUnits = :quantityUnits, Subtotal = :subtotal, Price = :price, Mrp = :mrp, Savings = :savings',
             ExpressionAttributeValues: {
                 ':quantity': quantity,
@@ -89,31 +157,40 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
                 ':subtotal': parseFloat(subtotal),
                 ':price': parseFloat(price),
                 ':mrp': parseFloat(mrp),
-                ':savings': parseFloat(savings),
+                ':savings': parseFloat(savings)
             },
-            ReturnValues: 'UPDATED_NEW',
+            ReturnValues: 'UPDATED_NEW'
         };
 
-        await docClient.update(params).promise();
-        return { statusCode: 200, message: "Cart item updated successfully" };
+        const data = await docClient.update(params).promise();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: "Cart item updated successfully", data }),
+        };
     } catch (error) {
         console.error('Error updating cart item:', error);
-        return { statusCode: 500, message: "Internal Server Error", error };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: "Internal Server Error", error }),
+        };
     }
 }
 
 exports.handler = async (event) => {
-    const { userId, cartItems } = JSON.parse(event.body);
+    const { userId, productId, quantity, quantityUnits } = JSON.parse(event.body);
 
-    if (!userId || !Array.isArray(cartItems) || cartItems.length === 0) {
+    if (!userId || !productId || !quantity || !quantityUnits) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ message: "Missing required fields or cart items" }),
+            body: JSON.stringify({ message: "Missing required fields" }),
         };
     }
 
     try {
+        // Check if the user exists
         const user = await getUserDetails(userId);
+
         if (!user) {
             return {
                 statusCode: 404,
@@ -121,19 +198,15 @@ exports.handler = async (event) => {
             };
         }
 
-        const results = [];
-        for (const item of cartItems) {
-            const { productId, quantity, quantityUnits } = item;
-            const updateResult = await updateCartItem(userId, productId, quantity, quantityUnits);
-            results.push(updateResult);
-        }
+        // Update the cart item
+        const updateResult = await updateCartItem(userId, productId, quantity, quantityUnits);
 
         return {
-            statusCode: 200,
-            body: JSON.stringify({ message: "Cart items processed", results }),
+            statusCode: updateResult.statusCode,
+            body: updateResult.body,
         };
     } catch (error) {
-        console.error('Error processing cart items:', error);
+        console.error('Error updating cart item:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),

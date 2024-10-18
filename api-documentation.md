@@ -191,7 +191,7 @@ Retrieves Persnal details of user.
 <br>
 
 
-## API Endpoint: addItemsCart
+## API Endpoint: addListOFItems in Cart
 
 This endpoint is used to add products Items in cart.
 
@@ -201,7 +201,7 @@ This endpoint is used to add products Items in cart.
 
 ## URL
 
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/addItem`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/addListOfItems`
 
 ## Content-Type
 
@@ -235,7 +235,7 @@ The request body should be a JSON object with the following fields:
 
 ```
 
-## API Endpoint: Update Cart Item
+## API Endpoint: Update Cart Items
 
 Updates the quantity of an item in the user's cart .
 
@@ -245,7 +245,7 @@ Updates the quantity of an item in the user's cart .
 
 ## URL
 
-- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/updateItem`  
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/updateListOfItems`  
 
 ## Content-Type
 
@@ -278,6 +278,74 @@ The request body should be a JSON object with the following fields:
     ]
 }
 ```
+
+
+## API Endpoint: addItems in Cart
+
+This endpoint is used to add products Items in cart.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/addItem`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "854f5788-4bb5-4714-b47f-67d9173b0c63",
+    "productId": "800edc08-644e-4abd-97a5-d8095a431ce1",
+    "quantity": 1,
+    "quantityUnits":1
+}
+
+```
+
+
+
+## API Endpoint:update Item in Cart
+
+This endpoint is used to add products Items in cart.
+
+## Method
+
+- **Method**: POST
+
+## URL
+
+- **URL**: `https://09ubwkjphb.execute-api.us-east-1.amazonaws.com/cart/updateItem`
+
+## Content-Type
+
+- **Content-Type**: `application/json`
+
+## Request Body
+
+The request body should be a JSON object with the following fields:
+
+```json
+{
+    "userId": "854f5788-4bb5-4714-b47f-67d9173b0c63",
+    "productId": "800edc08-644e-4abd-97a5-d8095a431ce1",
+    "quantity": 1,
+    "quantityUnits":1
+}
+
+```
+
+
+
+
+
 
 ## API Endpoint: Delete Cart Item
 

@@ -135,3 +135,12 @@ createUserInWhatsappCommerce:
     - httpApi:
         path: /createUserInWhatsaapCommerce
         method: post
+
+
+
+getUserByNumber:
+  handler: Users/getUserByPhoneNumber.handler
+  events:
+    - httpApi:
+        path: /getUserByNumber
+        method: get

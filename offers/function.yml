@@ -24,3 +24,11 @@ getOffersProductsByOffersId:
       - httpApi:
           path: /getOffersProductsByOffersId/{offerId}
           method: get
+
+
+getOffers:
+    handler: offers/getOffers.handler
+    events:
+      - httpApi:
+          path: /getOffers
+          method: get

@@ -74,3 +74,12 @@ getBySubCategory:
     - httpApi:
         path: /getProductBySubCategory
         method: get
+
+
+homePageProducts:
+  handler: products/homePageProducts.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /homePageProducts
+        method: get

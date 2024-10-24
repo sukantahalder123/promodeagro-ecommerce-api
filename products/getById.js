@@ -55,7 +55,7 @@ module.exports.getProductById = async (event) => {
 
 
 
-
+   
     // Convert qty to grams if necessary
     if (product.unitPrices) {
       product.unitPrices = product.unitPrices.map(unitPrice => ({

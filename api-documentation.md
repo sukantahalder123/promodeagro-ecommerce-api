@@ -577,6 +577,22 @@ Get default Address .
 
   it return cartItems of user if its added in the cart 
 
+
+
+## API Endpoint: Get HomePage Products
+
+
+### Method
+- **Method**: GET
+
+### URL
+- **URL**: `https://9ti4fcd117.execute-api.ap-south-1.amazonaws.com/homePageProducts}?userId={userId}`
+
+  it return cartItems of user if its added in the cart 
+
+
+
+
 ## API Endpoint: Product Filters
 
 ### Method

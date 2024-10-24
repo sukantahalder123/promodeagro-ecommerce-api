@@ -42,11 +42,45 @@ async function getUserDetails(userId) {
     }
 }
 
+
+async function emptyUserCart(userId) {
+    // Query to get all items in the cart for the user
+    const params = {
+        TableName: process.env.CART_TABLE,
+        KeyConditionExpression: "UserId = :userId",
+        ExpressionAttributeValues: {
+            ":userId": userId,
+        },
+    };
+
+    try {
+        const data = await docClient.query(params).promise();
+        const cartItems = data.Items;
+
+        // If there are items in the cart, delete them
+        if (cartItems && cartItems.length > 0) {
+            for (const item of cartItems) {
+                const deleteParams = {
+                    TableName: process.env.CART_TABLE,
+                    Key: {
+                        UserId: userId,
+                        ProductId: item.ProductId, // Assuming ProductId is part of the primary key
+                    },
+                };
+                await docClient.delete(deleteParams).promise();
+            }
+        }
+    } catch (error) {
+        console.error('Error emptying user cart:', error);
+        throw error;
+    }
+}
+
 // Function to update the cart with multiple items
 exports.handler = async (event) => {
     const { userId, cartItems } = JSON.parse(event.body);
 
-    if (!userId || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+    if (!userId) {
         return {
             statusCode: 400,
             body: JSON.stringify({ message: "Missing or invalid cart items" }),
@@ -62,6 +96,17 @@ exports.handler = async (event) => {
                 statusCode: 404,
                 body: JSON.stringify({ message: "User not found" }),
             };
+        }
+
+        if (cartItems.length === 0) {
+
+            await emptyUserCart(userId);
+
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: "cart empty successfully" }),
+            };
+
         }
 
         // Process each item in the cart
@@ -151,13 +196,14 @@ exports.handler = async (event) => {
                     Savings: savings,
                     Price: price,
                     category: product.category,
-                    subcategory: product.subcategory,
+                    // subcategory: product.subcategory,
                     Subtotal: subtotal,
                     Mrp: mrp
                 },
             };
-
-            await docClient.put(params).promise();
+            console.log(params)
+            const addedcart = await docClient.put(params).promise();
+            console.log(addedcart)
         }
 
         return {

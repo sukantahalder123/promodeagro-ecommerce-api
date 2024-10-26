@@ -11,3 +11,12 @@ getAllCategory:
     - httpApi:
         path: /category
         method: get
+
+
+
+getCategory:
+  handler: category/getCategories.handler
+  events:
+    - httpApi:
+        path: /getAllCategories
+        method: get

@@ -7,6 +7,20 @@ require('dotenv').config();
 const client = new AWS.DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
 
+// Base URLs for categories and subcategories
+const CATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/';
+const SUBCATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/subCategories/';
+
+// Function to generate category image URL
+const getCategoryImageUrl = (category) => {
+  return `${CATEGORY_BASE_URL}${encodeURIComponent(category.replace(/\s+/g, '_').toLowerCase())}.png`;
+};
+
+// Function to generate subcategory image URL
+const getSubcategoryImageUrl = (subCategory) => {
+  return `${SUBCATEGORY_BASE_URL}${encodeURIComponent(subCategory.replace(/\s+/g, '_').toLowerCase())}.jpg`;
+};
+
 exports.handler = async (event) => {
   const params = {
     TableName: process.env.PRODUCTS_TABLE,
@@ -43,15 +57,19 @@ exports.handler = async (event) => {
       }
     });
 
-    // Convert categoryMap to an array of objects
+    // Convert categoryMap to an array of objects with dynamic image URLs for categories and subcategories
     const categories = Object.keys(categoryMap).map(category => ({
       CategoryName: category,
-      Subcategories: Array.from(categoryMap[category]) // Convert Set to Array
+      image_url: getCategoryImageUrl(category),
+      Subcategories: Array.from(categoryMap[category]).map(subCategory => ({
+        name: subCategory,
+        image_url: getSubcategoryImageUrl(subCategory)
+      }))
     }));
 
     // Sort categories and subcategories alphabetically (optional)
     categories.forEach(category => {
-      category.Subcategories.sort();
+      category.Subcategories.sort((a, b) => a.name.localeCompare(b.name));
     });
     categories.sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
 

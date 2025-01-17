@@ -7,7 +7,7 @@ async function getUserDetails(userId) {
     const params = {
         TableName: process.env.USERS_TABLE,
         Key: {
-            UserId: userId, // Assuming 'id' is the primary key for the Users table
+            UserId: userId, // Assuming 'UserId' is the primary key for the Users table
         },
     };
 
@@ -60,17 +60,26 @@ exports.handler = async (event) => {
             totalSavings += item.Savings || 0;
         });
 
+        // Calculate delivery charges
+        let deliveryCharges = subTotal > 300 ? 0 : 50;
+
+        // Add delivery charges to subtotal if applicable
+        const finalTotal = subTotal + deliveryCharges;
+
         const response = {
             statusCode: 200,
             body: JSON.stringify({
                 items: data.Items,
-                subTotal,
+                subTotal: subTotal.toFixed(2),
                 savings: totalSavings.toFixed(2),
+                deliveryCharges,
+                finalTotal: finalTotal.toFixed(2)
             }),
         };
 
         return response;
     } catch (error) {
+        console.error('Error fetching cart details:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),

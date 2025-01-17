@@ -15,3 +15,10 @@ razorpayWebhook:
      - httpApi:
          path: /razorpayWebhook
          method: POST
+
+cashFreeWebhook:
+   handler:  payment/cashFreeWebhook.handler
+   events:
+     - httpApi:
+         path: /cashFreeWebhook
+         method: POST

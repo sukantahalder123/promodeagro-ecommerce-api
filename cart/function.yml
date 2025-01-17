@@ -41,3 +41,10 @@ updateListOfItemsInCart:
       - httpApi:
           path: /cart/updateListOfItems
           method: put
+
+removeAllItems:
+    handler: cart/removeAllItemsInCart.handler
+    events:
+      - httpApi:
+          path: /cart/remnoveAll/{userId}
+          method: delete

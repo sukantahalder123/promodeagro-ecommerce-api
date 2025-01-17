@@ -1,14 +1,28 @@
 createDeliverySlot:
-    handler: deliverySlots/createDeliverySlots.handler
-    events:
-      - httpApi:
-          path: /deliverySlot
-          method: post   
-
+  handler: deliverySlots/createDeliverySlots.handler
+  events:
+    - httpApi:
+        path: /deliverySlot
+        method: post
 
 getAllAvailableDeliverySlots:
-    handler: deliverySlots/getAllAvailableDeliverySlots.handler
-    events:
-      - httpApi:
-          path: /getAvailableDeliverySlots
-          method: get
+  handler: deliverySlots/getAllAvailableDeliverySlots.handler
+  events:
+    - httpApi:
+        path: /getAvailableDeliverySlots
+        method: get
+
+getSlotsByPinCode:
+  handler: deliverySlots/getSlotsByPincode.handler
+  events:
+    - httpApi:
+        path: /slots/{pincode}
+        method: get
+
+
+getAllSlots:
+  handler: deliverySlots/getAllSlots.handler
+  events:
+    - httpApi:
+        path: /slots
+        method: get

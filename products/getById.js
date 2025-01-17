@@ -50,7 +50,7 @@ module.exports.getProductById = async (event) => {
 
     var product = productData.Item;
     product.price = inventoryItem.unitPrices[0].price;
-    product.mrp = inventoryItem.unitPrices[0].discountedPrice;
+    product.mrp = inventoryItem.unitPrices[0].mrp;
     product.unitPrices = inventoryItem.unitPrices;
 
 

@@ -3,7 +3,7 @@ const docClient = new AWS.DynamoDB.DocumentClient();
 require('dotenv').config();
 
 exports.handler = async (event) => {
-    const { subcategory, userId, pageSize = 10, pageNumber = 1, exclusiveStartKey } = event.queryStringParameters;
+    const { subcategory, userId } = event.queryStringParameters;
 
     if (!subcategory) {
         return {
@@ -12,11 +12,6 @@ exports.handler = async (event) => {
         };
     }
 
-    // Decode the ExclusiveStartKey
-    const decodedExclusiveStartKey = exclusiveStartKey
-        ? JSON.parse(Buffer.from(decodeURIComponent(exclusiveStartKey), 'base64').toString('utf8'))
-        : undefined;
-
     try {
         // Fetch total item count for the subcategory
         const countParams = {
@@ -24,7 +19,7 @@ exports.handler = async (event) => {
             IndexName: 'subCategoryIndex',
             KeyConditionExpression: 'subCategory = :subcategory',
             ExpressionAttributeValues: {
-                ':subcategory': subcategory, // Define subcategory correctly\
+                ':subcategory': subcategory, // Define subcategory correctly
                 ':trueValue': true,  // Correct boolean for availability
             },
             Select: 'COUNT',
@@ -35,9 +30,8 @@ exports.handler = async (event) => {
         };
         const countData = await docClient.query(countParams).promise();
         const totalItems = countData.Count;
-        const totalPages = Math.ceil(totalItems / parseInt(pageSize));
 
-        // Fetch paginated products
+        // Fetch all products related to the subcategory (no pagination)
         const params = {
             TableName: process.env.PRODUCTS_TABLE,
             IndexName: 'subCategoryIndex',
@@ -46,8 +40,6 @@ exports.handler = async (event) => {
                 ':subcategory': subcategory,
                 ':trueValue': true,  // Correct boolean for availability
             },
-            Limit: parseInt(pageSize),
-            ExclusiveStartKey: decodedExclusiveStartKey,
             FilterExpression: '#availability = :trueValue',  // Use availability in FilterExpression
             ExpressionAttributeNames: {
                 '#availability': 'availability',  // Define availability correctly
@@ -74,7 +66,7 @@ exports.handler = async (event) => {
             // If inventory data exists, update the product with price, mrp, and unitPrices
             if (inventoryItem) {
                 product.price = inventoryItem.unitPrices[0].price || 0;
-                product.mrp = inventoryItem.unitPrices[0].discountedPrice || 0;
+                product.mrp = inventoryItem.unitPrices[0].mrp || 0;
                 product.unitPrices = inventoryItem.unitPrices || [];
             }
 
@@ -126,7 +118,7 @@ exports.handler = async (event) => {
                     };
                 } else {
                     product.inCart = false;
-                    product.savingsPercentage = product.savingsPercentage || 0,
+                    product.savingsPercentage = product.savingsPercentage || 0;
                     product.cartItem = {
                         ProductId: product.id,
                         UserId: userId,
@@ -146,7 +138,7 @@ exports.handler = async (event) => {
         } else {
             products.forEach(product => {
                 product.inCart = false;
-                product.savingsPercentage = product.savingsPercentage || 0
+                product.savingsPercentage = product.savingsPercentage || 0;
                 product.inWishlist = false;
                 product.cartItem = {
                     ProductId: product.id,
@@ -163,24 +155,10 @@ exports.handler = async (event) => {
             });
         }
 
-        // Encode the LastEvaluatedKey
-        const encodedLastEvaluatedKey = data.LastEvaluatedKey
-            ? encodeURIComponent(Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64'))
-            : null;
-
-        // Prepare the response
+        // Prepare the response without pagination
         const response = {
             products: products,
-            pagination: {
-                currentPage: parseInt(pageNumber),
-                pageSize: parseInt(pageSize),
-                totalPages: totalPages,
-                nextPage: encodedLastEvaluatedKey ? parseInt(pageNumber) + 1 : null,
-                lastEvaluatedKey: encodedLastEvaluatedKey,
-
-                // currentTotalProducts: products.length,
-                TotalProducts: totalItems
-            },
+            TotalProducts: totalItems,
         };
 
         return {

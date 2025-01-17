@@ -83,3 +83,12 @@ homePageProducts:
     - httpApi:
         path: /homePageProducts
         method: get
+
+
+demoPrducts:
+  handler: products/demo.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /demo
+        method: get

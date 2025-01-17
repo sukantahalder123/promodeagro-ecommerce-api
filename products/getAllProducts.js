@@ -1,4 +1,3 @@
-
 const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 require('dotenv').config();
@@ -8,10 +7,14 @@ const dynamoDB = new DynamoDBClient({ region: process.env.AWS_REGION });
 module.exports.handler = async (event) => {
   try {
     const userId = event.queryStringParameters && event.queryStringParameters.userId;
-    const pageNumber = parseInt(event.queryStringParameters.pageNumber) || 1;
-    const pageSize = parseInt(event.queryStringParameters.pageSize) || 10;
+    const pageNumber = event.queryStringParameters && event.queryStringParameters.pageNumber
+      ? parseInt(event.queryStringParameters.pageNumber)
+      : null;
+    const pageSize = event.queryStringParameters && event.queryStringParameters.pageSize
+      ? parseInt(event.queryStringParameters.pageSize)
+      : null;
 
-    // Fetch all products (consider potential large data size)
+    // Fetch all products with a filter for availability
     const scanParams = {
       TableName: process.env.PRODUCTS_TABLE,
       FilterExpression: '#availability = :trueValue',
@@ -24,7 +27,6 @@ module.exports.handler = async (event) => {
     };
 
     const productsData = await dynamoDB.send(new ScanCommand(scanParams));
-    console.log(scanParams)
     
     if (!productsData.Items || productsData.Items.length === 0) {
       return {
@@ -35,43 +37,39 @@ module.exports.handler = async (event) => {
 
     let products = productsData.Items.map(item => unmarshall(item));
 
-    // console.log(products)
-    // Calculate total items and total pages
-    const totalItems = products.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    // If pagination parameters are provided, calculate pagination
+    if (pageNumber && pageSize) {
+      const totalItems = products.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+      const startIndex = (pageNumber - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
 
-    // Calculate start and end indices for pagination
-    const startIndex = (pageNumber - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    
-    // Slice products for the current page
-    products = products.slice(startIndex, endIndex);
+      products = products.slice(startIndex, endIndex);
 
-    // Fetch additional info (cart and wishlist) as before
-    let productsWithCartInfo = await getProductsWithCartInfo(products, userId);
+      const response = {
+        products: await fetchProductDetailsWithCartAndWishlistInfo(products, userId),
+        pagination: {
+          currentPage: pageNumber,
+          pageSize,
+          totalPages,
+          nextPage: pageNumber < totalPages ? pageNumber + 1 : null,
+          totalProducts: totalItems,
+        },
+      };
+      
+      return {
+        statusCode: 200,
+        body: JSON.stringify(response),
+      };
+    } else {
+      // If no pagination, return all products without pagination data
+      const productsWithCartInfo = await fetchProductDetailsWithCartAndWishlistInfo(products, userId);
 
-    if (userId) {
-      productsWithCartInfo = await fetchCartAndWishlistInfo(productsWithCartInfo, userId);
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ products: productsWithCartInfo }),
+      };
     }
-
-    const response = {
-      products: productsWithCartInfo,
-      pagination: {
-        currentPage: pageNumber,
-        pageSize: pageSize,
-        totalPages: totalPages,
-        nextPage: pageNumber + 1 || null,
-        lastEvaluatedKey: "faead",
-        TotalProducts: totalItems,
-      },
-    };
-
-
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response),
-    };
   } catch (error) {
     console.error('Error fetching products:', error);
     return {
@@ -80,6 +78,16 @@ module.exports.handler = async (event) => {
     };
   }
 };
+
+async function fetchProductDetailsWithCartAndWishlistInfo(products, userId) {
+  let productsWithCartInfo = await getProductsWithCartInfo(products, userId);
+
+  if (userId) {
+    productsWithCartInfo = await fetchCartAndWishlistInfo(productsWithCartInfo, userId);
+  }
+
+  return productsWithCartInfo;
+}
 
 async function getProductsWithCartInfo(products, userId) {
   return Promise.all(
@@ -107,10 +115,12 @@ async function getProductsWithCartInfo(products, userId) {
           throw new Error("Product not found in inventory");
         }
 
-        console.log(productId)
-
         const inventoryItem = unmarshall(inventoryData.Items[0]);
 
+        if (!inventoryItem.unitPrices || inventoryItem.unitPrices.length === 0 || !inventoryItem.unitPrices[0].price) {
+          console.log(`Price not available for productId: ${productId}`);
+
+        }
         const defaultCartItem = {
           ProductId: product.id,
           UserId: userId || "defaultUserId",
@@ -120,14 +130,13 @@ async function getProductsWithCartInfo(products, userId) {
           Price: inventoryItem.onlineStorePrice || 0,
           Mrp: inventoryItem.compareAt || 0,
           Quantity: 0,
-
           productImage: product.image || "",
           productName: product.name || "",
         };
 
         return {
           unit: product.unit,
-          savingsPercentage: product.savingsPercentage ||0,
+          savingsPercentage: product.savingsPercentage || 0,
           image: product.image,
           category: product.category,
           images: product.images,
@@ -137,7 +146,7 @@ async function getProductsWithCartInfo(products, userId) {
           availability: product.availability,
           price: inventoryItem.unitPrices[0].price || 0,
           unitPrices: inventoryItem.unitPrices,
-          mrp: inventoryItem.unitPrices[0].discountedPrice || 0,
+          mrp: inventoryItem.unitPrices[0].mrp || 0,
           inCart: false,
           inWishlist: false,
           cartItem: defaultCartItem,
@@ -230,7 +239,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
 
         return {
           unit: product.unit,
-          savingsPercentage: product.savingsPercentage ||0,
+          savingsPercentage: product.savingsPercentage || 0,
           image: product.image,
           category: product.category,
           images: product.images,
@@ -240,7 +249,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
           availability: product.availability,
           price: inventoryItem.unitPrices[0].price || 0,
           unitPrices: inventoryItem.unitPrices,
-          mrp: inventoryItem.unitPrices[0].discountedPrice || 0,
+          mrp: inventoryItem.unitPrices[0].mrp || 0,
           inCart: cartItemsMap.has(productId),
           inWishlist: wishlistItemsSet.has(productId),
           cartItem,
@@ -253,7 +262,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
   } catch (error) {
     console.error('Error fetching products:', error);
     return {
-      statusCode: 200, // Return 200 status code even on error
+      statusCode: 200,
       body: JSON.stringify({ message: 'Failed to fetch products, default response.', error: error.message }),
     };
   }

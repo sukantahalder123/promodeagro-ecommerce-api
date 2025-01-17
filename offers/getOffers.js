@@ -5,7 +5,7 @@ exports.handler = async (event) => {
         // Hardcoded data
         const offers = [
             {
-                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/bengali_special.jpg",
+                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/offers/offer_1.jpg",
                 category: "Bengali Special",
                 subCategory: "Bengali Vegetables",
                 filters: {
@@ -15,7 +15,7 @@ exports.handler = async (event) => {
                 }
             },
             {
-                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/dairy.jpg",
+                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/offers/offer_2.jpg",
                 category: "Dairy",
                 subCategory: "Butter & Ghee",
                 filters: {
@@ -25,7 +25,7 @@ exports.handler = async (event) => {
                 }
             },
             {
-                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/fresh_fruits.jpg",
+                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/offers/offer_3.jpg",
                 category: "Fresh Fruits",
                 subCategory: "Exotic Fruits",
                 filters: {
@@ -33,27 +33,8 @@ exports.handler = async (event) => {
                     maxPrice: 200,
                     discounts: 15
                 }
-            },
-            {
-                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/eggs_meat_%26_fish.jpg",
-                category: "Eggs Meat & Fish",
-                subCategory: "Chicken",
-                filters: {
-                    minPrice: 100,
-                    maxPrice: 500,
-                    discounts: 8
-                }
-            },
-            {
-                imageUrl: "https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/groceries.jpg",
-                category: "Groceries",
-                subCategory: "Cooking Oil",
-                filters: {
-                    minPrice: 30,
-                    maxPrice: 150,
-                    discounts: 12
-                }
             }
+          
         ];
 
         return {

@@ -1,4 +1,4 @@
-const { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand, ScanCommand } = require('@aws-sdk/client-dynamodb');
 const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 const crypto = require('crypto')
 require('dotenv').config();
@@ -15,9 +15,10 @@ const orderProcessSFArn = 'arn:aws:states:ap-south-1:851725323791:stateMachine:O
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const lambda = new LambdaClient({});
-const { createPaymentLink } = require('../payment/createPaymentOrder');
+const { createPaymentLink } = require('../payment/CashFreeOrder');
 const { generateBillImage } = require('../whatsaapNotifications/generateBillImage');
 const { shareBillOnWhatsaap } = require('../whatsaapNotifications/shareBillOnWhatsaap');
+const { Console } = require('console');
 // Create DynamoDB client with options to remove undefined values
 const dynamoDB = new DynamoDBClient({
   // Add any specific configurations here
@@ -201,32 +202,105 @@ async function deleteCartItem(userId, productId) {
 }
 
 // Function to fetch delivery slot details by slotId
-async function getDeliverySlotDetails(slotId) {
-  const getSlotParams = {
-    TableName: deliverySlotTableName,
-    Key: marshall({ slotId })
-  };
+// async function getDeliverySlotDetails(slotId) {
+//   const getSlotParams = {
+//     TableName: deliverySlotTableName,
+//     Key: marshall({ slotId })
+//   };
 
+//   try {
+//     const { Item: slotItem } = await dynamoDB.send(new GetItemCommand(getSlotParams));
+//     return slotItem ? unmarshall(slotItem) : null;
+//   } catch (error) {
+//     console.error('Error fetching delivery slot:', error);
+//     throw new Error('Error fetching delivery slot details');
+//   }
+// }
+async function getDeliverySlotDetails(slotId) {
   try {
-    const { Item: slotItem } = await dynamoDB.send(new GetItemCommand(getSlotParams));
-    return slotItem ? unmarshall(slotItem) : null;
+    const scanParams = {
+      TableName: deliverySlotTableName, // Ensure this is properly initialized
+    };
+
+    // Fetch all records from the DynamoDB table
+
+    console.log(slotId)
+    const { Items } = await dynamoDB.send(new ScanCommand(scanParams));
+    if (!Items || Items.length === 0) {
+      return null; // No records found
+    }
+
+    // Unmarshall all items into usable JavaScript objects
+    const allSlots = Items.map((item) => unmarshall(item));
+
+    // Traverse the structure to find the matching slotId
+    let matchedSlot = null;
+    let matchedShift = null;
+    for (const slot of allSlots) {
+      // console.log("slot")
+      // console.log(slot)
+      if (slot.shifts) {
+        for (const shift of slot.shifts) {
+
+          for (const slotDetails of shift.slots || []) {
+            if (slotDetails.id === slotId) {
+              matchedSlot = slotDetails;
+              console.log(matchedSlot)
+              matchedShift = shift.name;
+              console.log("Matched Shift:", shift.name);
+
+              break;
+            }
+          }
+          if (matchedSlot) break;
+        }
+      }
+      if (matchedSlot) break;
+    }
+
+    // Return the matched slot details or null if not found
+    return {
+      slot: matchedSlot,
+      shift: matchedShift,
+    } || null;
   } catch (error) {
-    console.error('Error fetching delivery slot:', error);
+    console.error('Error fetching delivery slot details:', error);
     throw new Error('Error fetching delivery slot details');
   }
 }
+
+
 
 // Handler function to create an order
 module.exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { items, userId, addressId, paymentDetails, deliverySlotId } = body; // Include addressId, paymentDetails, and deliverySlotId here
+    const { items, userId, addressId, paymentDetails, deliverySlotId } = body; // Extract all required fields
 
-    // Validate input
-    if (!Array.isArray(items) || items.length === 0 || !userId || !addressId || !paymentDetails || !deliverySlotId) { // Check for addressId, userId, paymentDetails, and deliverySlotId
-      throw new Error('Invalid input. "items" must be a non-empty array, "userId", "addressId", "paymentDetails", and "deliverySlotId" are required.');
+    // Initialize an array to hold missing or invalid fields
+    const errors = [];
+
+    // Validate input fields
+    if (!Array.isArray(items) || items.length === 0) {
+      errors.push('"items" must be a non-empty array');
+    }
+    if (!userId) {
+      errors.push('"userId" is required');
+    }
+    if (!addressId) {
+      errors.push("please select address");
+    }
+    if (!paymentDetails) {
+      errors.push("please select paymentDetails");
+    }
+    if (!deliverySlotId) {
+      errors.push("please select delivery slot");
     }
 
+    // If there are errors, throw an error with details
+    if (errors.length > 0) {
+      throw new Error(errors);
+    }
     const orderId = generateRandomOrderId().toString();
 
     // Fetch user details using userId
@@ -242,7 +316,10 @@ module.exports.handler = async (event) => {
     }
 
     // Fetch delivery slot details using deliverySlotId
+    console.log("deliverryyyyyy")
     const deliverySlotDetails = await getDeliverySlotDetails(deliverySlotId);
+
+    console.log(deliverySlotDetails)
     if (!deliverySlotDetails) {
       throw new Error('Delivery slot not found');
     }
@@ -255,11 +332,22 @@ module.exports.handler = async (event) => {
       const { product, price, mrp, savings, subtotal } = await getProductDetails(item.productId, item.quantity, item.quantityUnits);
 
       totalPrice += subtotal;
-      totalSavings += savings; // Accumulate savings for each item
+      totalSavings += savings;
+      // Accumulate savings for each item
+
+      console.log(subtotal)
+      console.log(totalPrice)
+      var deliveryCharges = totalPrice > 300 ? 0 : 50;
+
+      console.log(deliveryCharges)
+
+      // Add delivery charges to subtotal if applicable
+      var finalTotal = totalPrice + deliveryCharges;
 
       orderItems.push({
         productId: item.productId,
         productName: product.name,
+        productImage: product.image,
         unit: product.unit,
         quantity: item.quantity,
         quantityUnits: item.quantityUnits,
@@ -282,20 +370,24 @@ module.exports.handler = async (event) => {
 
     if (paymentDetails.method === "cash") {
       paymentDetails.status = "PENDING"
-    } else {
+      console.log("billllsss")
 
-      const payment = await createPaymentLink(totalPrice, "order", orderId);
+      const bill = await generateBillImage(orderItems)
+      console.log(bill)
+      console.log("billllsss")
+
+      const response = await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
+
+    } else {
+      console.log("testing")
+
+      const payment = await createPaymentLink(orderId, addressDetails, userId, finalTotal);
       paymentDetails.status = "PENDING"
       paymentDetails.paymentLink = payment;
     }
 
-    console.log("bill")
 
 
-    const bill = await generateBillImage(orderItems)
-    console.log(bill)
-
-    await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
     //  await sendBill(addressDetails.phoneNumber, process.env.FACEBOOK_ACCESS_TOKEN, orderItems)
 
     console.log(paymentDetails);
@@ -303,25 +395,28 @@ module.exports.handler = async (event) => {
     const subTotal = orderItems.reduce((acc, item) => {
       return acc + item.subtotal
     }, 0)
+
     const orderItem = {
       id: orderId,
       createdAt: getCurrentISTTime(),
       items: orderItems,
       totalPrice: totalPrice.toFixed(2),
       subTotal: subTotal,
+      finalTotal: finalTotal,
+      deliveryCharges: deliveryCharges,
       customerId: userId,
       customerName: addressDetails.name,
       customerNumber: addressDetails.phoneNumber,
       tax: 0,
-      deliveryCharges: 0,
       totalSavings: totalSavings.toFixed(2), // Ensure totalSavings is formatted to 2 decimal places
       userId: userId, // Use userId instead of customerId
       address: addressDetails, // Use the fetched address details
       paymentDetails: paymentDetails, // Include paymentDetails in the orderItem
       deliverySlot: {
-        id: deliverySlotDetails.slotId,
-        startTime: deliverySlotDetails.startTime,
-        endTime: deliverySlotDetails.endTime
+        id: deliverySlotDetails.slot.id,
+        startTime: deliverySlotDetails.slot.start,
+        endTime: deliverySlotDetails.slot.end,
+        shift: deliverySlotDetails.shift
       },
       // status: "Order placed",
       updatedAt: getCurrentISTTime(),
@@ -330,8 +425,8 @@ module.exports.handler = async (event) => {
       __typename: 'Order'
     };
 
-
-    // console.log(orderItem)
+    console.log("ORDER ")
+    console.log(orderItem)
 
     // Save order item to DynamoDB using PutItemCommand
     const putParams = {

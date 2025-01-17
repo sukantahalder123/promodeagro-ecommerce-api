@@ -2,8 +2,10 @@ require("dotenv").config();
 const axios = require("axios");
 const { randomInt } = require("node:crypto");
 
-const sms_auth = process.env.SMS_AUTH;
-const sms_auth_token = process.env.SMS_AUTH_TOKEN;
+const sms_auth = 'elXywroIYOf0MrQHA3as';
+const sms_auth_token = 'SrptLYo7GdknJeQ1bFjJl4JHSGnhactnaDESDc4H';
+// SMS_AUTH=
+// SMS_AUTH_TOKEN=
 
 async function sendOtp(otp, number) {
 	const url =
@@ -40,4 +42,6 @@ function generateOtp() {
 	return randomInt(100000, 999999);
 }
 
+
+// sendOtp(896285,8317582549)
 module.exports = { sendOtp, generateOtp };

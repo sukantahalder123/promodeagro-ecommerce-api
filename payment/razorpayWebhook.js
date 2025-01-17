@@ -1,7 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const { DynamoDBClient, UpdateItemCommand,GetItemCommand,DeleteItemCommand} = require('@aws-sdk/client-dynamodb');
-const { marshall , unmarshall} = require('@aws-sdk/util-dynamodb');
+const { DynamoDBClient, UpdateItemCommand, GetItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 require('dotenv').config();
 
 // Initialize DynamoDB client
@@ -36,12 +36,29 @@ module.exports.handler = async (event) => {
             const orderId = requestBody.payload.payment_link.entity.notes.ecom_order_id;
             console.log('Order ID:', orderId);
 
-            
 
             // Update the order status in DynamoDB
             await updatePaymentStatus(orderId, 'Paid');
             await deleteCartItemsByOrderId(orderId)
+            // Get current date in India (IST)
+            const options = {
+                timeZone: 'Asia/Kolkata', // Time zone for India
+                year: 'numeric', // Include the year
+                month: '2-digit', // Include the month in two-digit format
+                day: '2-digit' // Include the day in two-digit format
+            };
+
+            // Format the date
+            const currentDateInIndia = new Intl.DateTimeFormat('en-IN', options).format(new Date());
+            console.log(currentDateInIndia); // Example output: "28/10/2024"
+
+            await sendWhatsAppMessage(orderId, currentDateInIndia)
             console.log('Order payment status updated to "Paid"');
+
+            // const bill = await generateBillImage(orderItems)
+            // console.log(bill)
+
+            // await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
         } else {
             console.log('Payment not confirmed');
         }
@@ -82,6 +99,51 @@ async function updatePaymentStatus(orderId, paymentStatus) {
     }
 }
 
+async function sendWhatsAppMessage(orderId, date) {
+
+    const token = process.env.FACEBOOK_ACCESS_TOKEN;
+
+    const getOrderParams = {
+        TableName: process.env.ORDER_TABLE,
+        Key: marshall({ id: orderId })
+    };
+
+    console.log(getOrderParams)
+
+    const orderData = await dynamoDB.send(new GetItemCommand(getOrderParams));
+    const orderDetails = unmarshall(orderData.Item);
+    const amount = orderDetails.totalPrice;
+    const phoneNumber = orderDetails.address.phoneNumber;
+    console.log(orderDetails)
+
+
+    let data = JSON.stringify({
+        "messaging_product": "whatsapp",
+        "to": phoneNumber,
+        "type": "text",
+        "text": {
+            "body": `✨ *Payment Successful!* 🎉✨\n\n*Order Details:*\n🛒 *Order ID:* ${orderId}\n💰 *Amount:* ₹${amount}\n📅 *Date:* ${date}\n\nThank you for your purchase with *Pramode Agro Farms!* 🌾\n\nWe appreciate your trust in us and look forward to serving you again! 😊`
+        }
+    });
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://graph.facebook.com/v19.0/208582795666783/messages',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        data: data
+    };
+
+    try {
+        const response = await axios.request(config);
+        console.log(JSON.stringify(response.data));
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 async function deleteCartItemsByOrderId(orderId) {
     // Fetch order details using orderId

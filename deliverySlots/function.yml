@@ -26,3 +26,11 @@ getAllSlots:
     - httpApi:
         path: /slots
         method: get
+
+
+getSlotsByPinCodes:
+  handler: deliverySlots/pincode.handler
+  events:
+    - httpApi:
+        path: /slot/{pincode}
+        method: get

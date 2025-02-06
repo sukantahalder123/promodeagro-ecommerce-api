@@ -54,3 +54,11 @@ validateOrder:
 
 confirmedOrder: 
     handler: order/confirmOrder.handler
+
+
+cancelOrderStatus: 
+    handler: order/cancelOrderRequest.handler
+    events:
+      - httpApi:
+          path: /cancelOrderRequest
+          method: post

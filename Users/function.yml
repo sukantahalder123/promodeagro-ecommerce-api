@@ -144,3 +144,11 @@ getUserByNumber:
     - httpApi:
         path: /getUserByNumber
         method: get
+
+
+createFeedBack:
+  handler: Users/feedback.handler
+  events:
+    - httpApi:
+        path: /createFeedback
+        method: post

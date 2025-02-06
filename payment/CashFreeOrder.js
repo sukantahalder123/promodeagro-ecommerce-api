@@ -17,8 +17,8 @@ async function createPaymentLink(order_id, customerDetails, id, amount) {
             "link_id": order_id, // Unique ID for the payment link
             "link_purpose": "payment",
             "link_meta": {
-                "return_url": `https://promodeagro.com/mycart/address/order-placed/${order_id}`,
-                "notify_url":`https://promodeagro.com/mycart/address/order-placed/${order_id}`,
+                "return_url": `https://www.promodeagro.com/mycart/address/order-placed/${order_id}`,
+                "notify_url":`https://www.promodeagro.com/mycart/address/order-placed/${order_id}`,
             },
             "link_auto_reminders": true,
 

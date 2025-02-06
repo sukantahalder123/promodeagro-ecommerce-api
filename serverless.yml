@@ -60,6 +60,9 @@ functions:
   - ${file(sales/function.yml)}
   - ${file(saveForLater/function.yml)}
   - ${file(payment/function.yml)}
+  - ${file(userSession/function.yml)}
+
+  
 
 
   # - ${file(webhooks/function.yml)}

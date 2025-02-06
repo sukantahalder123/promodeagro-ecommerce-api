@@ -1,5 +1,3 @@
-// 'use strict';
-
 // const AWS = require('@aws-sdk/client-dynamodb');
 // const { DynamoDBDocumentClient, ScanCommand } = require('@aws-sdk/lib-dynamodb');
 // require('dotenv').config();
@@ -9,7 +7,7 @@
 
 // // Base URLs for categories and subcategories
 // const CATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/';
-// const SUBCATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/subCategories/subCategories.jpg';
+// const SUBCATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/subCategories/';
 
 // // Function to generate category image URL
 // const getCategoryImageUrl = (category) => {
@@ -18,7 +16,7 @@
 
 // // Function to generate subcategory image URL
 // const getSubcategoryImageUrl = (subCategory) => {
-//   return `${SUBCATEGORY_BASE_URL}${encodeURIComponent(subCategory.replace(/\s+/g, '_').toLowerCase())}.jpg`;
+//   return `${SUBCATEGORY_BASE_URL}${encodeURIComponent(subCategory)}.png`;
 // };
 
 // exports.handler = async (event) => {
@@ -63,7 +61,7 @@
 //       image_url: getCategoryImageUrl(category),
 //       Subcategories: Array.from(categoryMap[category]).map(subCategory => ({
 //         name: subCategory,
-//         image_url: SUBCATEGORY_BASE_URL
+//         image_url: getSubcategoryImageUrl(subCategory)
 //       }))
 //     }));
 
@@ -86,7 +84,6 @@
 //   }
 // };
 
-'use strict';
 
 const AWS = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, ScanCommand } = require('@aws-sdk/lib-dynamodb');
@@ -108,6 +105,16 @@ const getCategoryImageUrl = (category) => {
 const getSubcategoryImageUrl = (subCategory) => {
   return `${SUBCATEGORY_BASE_URL}${encodeURIComponent(subCategory)}.png`;
 };
+
+// Predefined category order
+const CATEGORY_ORDER = [
+  'Bengali Special',
+  'Fresh Vegetables',
+  'Fresh Fruits',
+  'Groceries',
+  'Eggs Meat & Fish',
+  'Dairy',
+];
 
 exports.handler = async (event) => {
   const params = {
@@ -155,11 +162,17 @@ exports.handler = async (event) => {
       }))
     }));
 
-    // Sort categories and subcategories alphabetically (optional)
+    // Sort categories according to predefined order
+    categories.sort((a, b) => {
+      const indexA = CATEGORY_ORDER.indexOf(a.CategoryName);
+      const indexB = CATEGORY_ORDER.indexOf(b.CategoryName);
+      return indexA - indexB;
+    });
+
+    // Sort subcategories alphabetically (optional)
     categories.forEach(category => {
       category.Subcategories.sort((a, b) => a.name.localeCompare(b.name));
     });
-    categories.sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
 
     return {
       statusCode: 200,

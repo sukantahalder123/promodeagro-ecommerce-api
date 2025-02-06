@@ -236,14 +236,31 @@ async function getDeliverySlotDetails(slotId) {
     // Traverse the structure to find the matching slotId
     let matchedSlot = null;
     let matchedShift = null;
-    for (const slot of allSlots) {
-      // console.log("slot")
+    let date = null;
+    const currentDate = new Date();
+
+
+    for (const slot of allSlots) {      // console.log("slot")
       // console.log(slot)
       if (slot.shifts) {
         for (const shift of slot.shifts) {
 
           for (const slotDetails of shift.slots || []) {
             if (slotDetails.id === slotId) {
+
+              console.log()
+              if (slot.deliveryType === "same day") {
+                date = currentDate.toISOString().split("T")[0];
+
+
+              }
+              else {
+                const tomorrowDate = new Date(currentDate);
+                tomorrowDate.setDate(currentDate.getDate() + 1);
+
+                // Format tomorrow's date (e.g., YYYY-MM-DD)
+                date = tomorrowDate.toISOString().split("T")[0];
+              }
               matchedSlot = slotDetails;
               console.log(matchedSlot)
               matchedShift = shift.name;
@@ -262,6 +279,7 @@ async function getDeliverySlotDetails(slotId) {
     return {
       slot: matchedSlot,
       shift: matchedShift,
+      date: date
     } || null;
   } catch (error) {
     console.error('Error fetching delivery slot details:', error);
@@ -362,13 +380,13 @@ module.exports.handler = async (event) => {
       // Delete the item from the cart after processing
       if (paymentDetails.method === "cash") {
 
-
         await deleteCartItem(userId, item.productId);
       }
     }
 
 
     if (paymentDetails.method === "cash") {
+      paymentDetails.method = "COD"
       paymentDetails.status = "PENDING"
       console.log("billllsss")
 
@@ -383,6 +401,7 @@ module.exports.handler = async (event) => {
 
       const payment = await createPaymentLink(orderId, addressDetails, userId, finalTotal);
       paymentDetails.status = "PENDING"
+      paymentDetails.method = "Prepaid"
       paymentDetails.paymentLink = payment;
     }
 
@@ -416,7 +435,10 @@ module.exports.handler = async (event) => {
         id: deliverySlotDetails.slot.id,
         startTime: deliverySlotDetails.slot.start,
         endTime: deliverySlotDetails.slot.end,
-        shift: deliverySlotDetails.shift
+        shift: deliverySlotDetails.shift,
+        endAmPm: deliverySlotDetails.slot.endAmPm,
+        startAmPm: deliverySlotDetails.slot.startAmPm,
+        date : deliverySlotDetails.date
       },
       // status: "Order placed",
       updatedAt: getCurrentISTTime(),

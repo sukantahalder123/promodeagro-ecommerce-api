@@ -48,7 +48,7 @@ exports.handler = async (event) => {
 
                 if (inventoryItem) {
                     product.price = inventoryItem.unitPrices[0].price || 0;
-                    product.mrp = inventoryItem.unitPrices[0].discountedPrice || 0;
+                    product.mrp = inventoryItem.unitPrices[0].mrp || 0;
                     product.unitPrices = inventoryItem.unitPrices || [];
                 }
 

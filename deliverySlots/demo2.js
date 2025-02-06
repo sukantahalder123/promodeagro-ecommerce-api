@@ -29,56 +29,36 @@ let config = {
 pincodes.forEach(pincode => {
     let data = JSON.stringify({
         "pincode": pincode,
-        "deliveryType": "same day",
+        "deliveryTypes": [
+            "next day"
+        ],
         "active": true,
         "shifts": [
-            {
-                "name": "Morning",
-                "slots": [
-                    {
-                        "start": "09:00",
-                        "end": "11:00",
-                        "startAmPm": "AM",
-                        "endAmPm": "AM",
-                        
-                    }
-                ]
-            },
+
             {
                 "name": "Afternoon",
                 "slots": [
                     {
-                        "start": "01:00",
-                        "end": "03:00",
+                        "start": "12:00",
+                        "end": "08:00",
                         "startAmPm": "PM",
                         "endAmPm": "PM",
-                        
-                    }
-                ]
-            },{
-                "name": "Evening",
-                "slots": [
-                    {
-                        "start": "04:00",
-                        "end": "07:00",
-                        "startAmPm": "PM",
-                        "endAmPm": "PM",
-                        
+
                     }
                 ]
             }
         ]
     });
-    
+
     config.data = data;
-    
+
     axios.request(config)
-    .then((response) => {
-        console.log(`Response for pincode ${pincode}:`, JSON.stringify(response.data));
-    })
-    .catch((error) => {
-        console.log(`Error for pincode ${pincode}:`, error);
-    });
+        .then((response) => {
+            console.log(`Response for pincode ${pincode}:`, JSON.stringify(response.data));
+        })
+        .catch((error) => {
+            console.log(`Error for pincode ${pincode}:`, error);
+        });
 });
 
 console.log(pincodes.length)

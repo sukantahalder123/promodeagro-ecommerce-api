@@ -1,0 +1,6 @@
+saveSession:
+  handler: userSession/saveSession.handler
+  events:
+    - httpApi:
+        path: /saveSession
+        method: post

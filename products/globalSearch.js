@@ -177,7 +177,6 @@
 // };
 
 'use strict';
-
 const AWS = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, ScanCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 require('dotenv').config();
@@ -196,19 +195,22 @@ exports.handler = async (event) => {
     };
   }
 
+  // Build the dynamic filter expression for the tags list (checking up to 10 tags)
+  const tagFilterExpression = Array(10).fill(0).map((_, i) => `contains(#tags[${i}], :query)`).join(' OR ');
+
   const params = {
     TableName: process.env.PRODUCTS_TABLE,
-    FilterExpression: "(contains(#search_name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query) OR contains(#teluguName, :query)) AND #availability = :trueValue",
+    FilterExpression: `(contains(#search_name, :query) OR contains(#category, :query) OR contains(#subCategory, :query) OR contains(#description, :query) OR ${tagFilterExpression}) AND #availability = :trueValue`,
     ExpressionAttributeNames: {
-      "#search_name": "search_name",  // Changed name field to search_name
+      "#search_name": "search_name",
       "#category": "category",
       "#subCategory": "subCategory",
       "#description": "description",
-      "#teluguName": "teluguName",    // Added Telugu name field
+      "#tags": "tags",  // This is for the 'tags' list
       "#availability": "availability"
     },
     ExpressionAttributeValues: {
-      ":query": query.toLowerCase(),
+      ":query": query.toLowerCase(),  // Convert query to lowercase for case-insensitive search
       ":trueValue": true
     }
   };
@@ -295,7 +297,7 @@ exports.handler = async (event) => {
 
         if (cartItem) {
           product.inCart = true;
-          product.savingsPercentage = product.savingsPercentage || 0,
+          product.savingsPercentage = product.savingsPercentage || 0;
           product.cartItem = {
             ...cartItem,
             selectedQuantityUnit: cartItem.QuantityUnits,
@@ -303,8 +305,7 @@ exports.handler = async (event) => {
           };
         } else {
           product.inCart = false;
-          product.savingsPercentage = product.savingsPercentage || 0,
-
+          product.savingsPercentage = product.savingsPercentage || 0;
           product.cartItem = {
             ProductId: product.id,
             UserId: userId,
@@ -323,7 +324,7 @@ exports.handler = async (event) => {
       });
     } else {
       products.forEach(product => {
-        product.savingsPercentage = product.savingsPercentage || 0,
+        product.savingsPercentage = product.savingsPercentage || 0;
 
         product.inCart = false;
         product.inWishlist = false;

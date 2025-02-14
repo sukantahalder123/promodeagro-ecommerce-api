@@ -13,71 +13,38 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Fetch total item count for the subcategory
-        const countParams = {
-            TableName: process.env.PRODUCTS_TABLE,
+        // Fetch all products related to the subcategory
+        const params = {
+            TableName: 'dev-promodeagro-admin-productsTable',
             IndexName: 'subCategoryIndex',
             KeyConditionExpression: 'subCategory = :subcategory',
             ExpressionAttributeValues: {
-                ':subcategory': subcategory, // Define subcategory correctly
-                ':trueValue': true,  // Correct boolean for availability
-            },
-            Select: 'COUNT',
-            FilterExpression: '#availability = :trueValue',  // Use availability in FilterExpression
-            ExpressionAttributeNames: {
-                '#availability': 'availability',  // Define availability correctly
-            },
-        };
-        const countData = await docClient.query(countParams).promise();
-        const totalItems = countData.Count;
-
-        // Fetch all products related to the subcategory (no pagination)
-        const params = {
-            TableName: process.env.PRODUCTS_TABLE,
-            IndexName: 'subCategoryIndex',
-            KeyConditionExpression: 'subCategory = :subcategory',  // Using subCategory as partition key
-            ExpressionAttributeValues: {
                 ':subcategory': subcategory,
-                ':trueValue': true,  // Correct boolean for availability
+                ':trueValue': true,
             },
-            FilterExpression: '#availability = :trueValue',  // Use availability in FilterExpression
+            FilterExpression: '#availability = :trueValue',
             ExpressionAttributeNames: {
-                '#availability': 'availability',  // Define availability correctly
+                '#availability': 'availability',
             },
         };
 
         const data = await docClient.query(params).promise();
         let products = data.Items || [];
 
-        // Fetch inventory data for each product using productIdIndex
-        for (let product of products) {
-            const inventoryParams = {
-                TableName: process.env.INVENTORY_TABLE,
-                IndexName: "productIdIndex",  // GSI name for inventory
-                KeyConditionExpression: "productId = :productId",
-                ExpressionAttributeValues: {
-                    ":productId": product.id,  // Product id
-                },
-            };
-
-            const inventoryData = await docClient.query(inventoryParams).promise();
-            const inventoryItem = inventoryData.Items && inventoryData.Items[0];
-
-            // If inventory data exists, update the product with price, mrp, and unitPrices
-            if (inventoryItem) {
-                product.price = inventoryItem.unitPrices[0].price || 0;
-                product.mrp = inventoryItem.unitPrices[0].mrp || 0;
-                product.unitPrices = inventoryItem.unitPrices || [];
-            }
-
-            // Convert qty to grams in unitPrices if needed
-            if (product.unitPrices) {
-                product.unitPrices = product.unitPrices.map(unitPrice => ({
-                    ...unitPrice,
-                    qty: unitPrice.qty,  // If required, adjust this logic
-                }));
-            }
-        }
+        products = products.map(product => ({
+            id: product.id,
+            name: product.name || '',
+            category: product.category || '',
+            subCategory: product.subCategory || '',
+            image: product.image || '',
+            images: product.images || [],
+            description: product.description || '',
+            availability: product.availability || false,
+            tags: product.tags || [],
+            price: product.sellingPrice || 0,
+            mrp: product.comparePrice,
+            unit: product.unit || '',
+        }));
 
         if (userId) {
             // Fetch cart items for the user
@@ -88,7 +55,6 @@ exports.handler = async (event) => {
                     ':userId': userId,
                 },
             };
-
             const cartData = await docClient.query(cartParams).promise();
             const cartItems = cartData.Items;
 
@@ -100,70 +66,40 @@ exports.handler = async (event) => {
                     ':userId': userId,
                 },
             };
-
             const wishlistData = await docClient.query(wishlistParams).promise();
-            const wishlistItems = wishlistData.Items;
-            const wishlistItemsSet = new Set(wishlistItems.map(item => item.ProductId));
+            const wishlistItemsSet = new Set(wishlistData.Items.map(item => item.ProductId));
 
-            products.forEach(product => {
+            products = products.map(product => {
                 const cartItem = cartItems.find(item => item.ProductId === product.id) || null;
                 const inWishlist = wishlistItemsSet.has(product.id);
 
-                if (cartItem) {
-                    product.inCart = true;
-                    product.cartItem = {
+                return {
+                    ...product,
+                    inCart: !!cartItem,
+                    inWishlist,
+                    cartItem: cartItem ? {
                         ...cartItem,
-                        selectedQuantityUnitprice: product.price,
+                        selectedQuantityUnitPrice: product.price,
                         selectedQuantityUnitMrp: product.mrp,
-                    };
-                } else {
-                    product.inCart = false;
-                    product.savingsPercentage = product.savingsPercentage || 0;
-                    product.cartItem = {
+                    } : {
                         ProductId: product.id,
                         UserId: userId,
                         Savings: 0,
                         QuantityUnits: 0,
                         Subtotal: 0,
-                        Price: product.price || 0,
-                        Mrp: product.mrp || 0,
+                        Price: product.price,
+                        Mrp: product.mrp,
                         Quantity: 0,
-                        productImage: product.image || '',
-                        productName: product.name || '',
-                    };
-                }
-
-                product.inWishlist = inWishlist;
-            });
-        } else {
-            products.forEach(product => {
-                product.inCart = false;
-                product.savingsPercentage = product.savingsPercentage || 0;
-                product.inWishlist = false;
-                product.cartItem = {
-                    ProductId: product.id,
-                    UserId: 'defaultUserId',
-                    Savings: 0,
-                    QuantityUnits: 0,
-                    Subtotal: 0,
-                    Price: product.price || 0,
-                    Mrp: product.mrp || 0,
-                    Quantity: 0,
-                    productImage: product.image || '',
-                    productName: product.name || '',
+                        productImage: product.image,
+                        productName: product.name,
+                    },
                 };
             });
         }
 
-        // Prepare the response without pagination
-        const response = {
-            products: products,
-            TotalProducts: totalItems,
-        };
-
         return {
             statusCode: 200,
-            body: JSON.stringify(response),
+            body: JSON.stringify({ products }),
         };
     } catch (error) {
         console.error('Error fetching products:', error);

@@ -82,17 +82,8 @@ async function getAddressDetails(userId, addressId) {
 
 // Function to fetch product details by productId
 async function getProductDetails(productId, quantity, quantityUnits) {
-  const params = {
-    TableName: process.env.INVENTORY_TABLE,
-    IndexName: "productIdIndex", // Replace with your actual GSI name
-    KeyConditionExpression: "productId = :productId",
-    ExpressionAttributeValues: {
-      ":productId": { S: productId },
-    },
-  };
-
-  // const inventoryData = await dynamoDB.send(new QueryCommand(params));
-  const inventoryData = await dynamoDB.send(new QueryCommand(params));
+ 
+ // const inventoryData = await dynamoDB.send(new QueryCommand(params));
 
   const getProductParams = {
     TableName: productTableName,
@@ -110,77 +101,13 @@ async function getProductDetails(productId, quantity, quantityUnits) {
   }
   const product = unmarshall(productItem);
 
-  let price, mrp, savings, subtotal;
-  const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
+  const price = product.sellingPrice;
+  const mrp = product.comparePrice;
+  const subtotal = product.sellingPrice * quantity;
+  const mrps = product.comparePrice * quantity;
+  const savings = mrps - subtotal; // Assuming `mrp` is the original price
+  // Prepare the item to be stored in the CartItems table
 
-  if (product.unit.toUpperCase() === 'PIECES') {
-    // For PCS, we assume there's a single price for each piece
-    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-      throw new Error("Invalid product pricing for PCS");
-    }
-
-    price = parseFloat(inventoryItem.onlineStorePrice);
-    mrp = parseFloat(inventoryItem.compareAt) || 0;
-    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
-    subtotal = parseFloat((price * quantity).toFixed(2));
-
-
-  } else if (product.unit.toUpperCase() === 'KGS') {
-    // For PCS, we assume there's a single price for each piece
-    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-      throw new Error("Invalid product pricing for PCS");
-    }
-
-    price = parseFloat(inventoryItem.onlineStorePrice);
-    mrp = parseFloat(inventoryItem.compareAt) || 0;
-    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
-    subtotal = parseFloat((price * quantity).toFixed(2));
-
-
-  } else if (product.unit.toUpperCase() === 'LITRES') {
-    // For PCS, we assume there's a single price for each piece
-    if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-      throw new Error("Invalid product pricing for PCS");
-    }
-
-    price = parseFloat(inventoryItem.onlineStorePrice);
-    mrp = parseFloat(inventoryItem.compareAt) || 0;
-    savings = parseFloat(((mrp - price) * quantity).toFixed(2));
-    subtotal = parseFloat((price * quantity).toFixed(2));
-
-
-  }
-  else if (product.unit.toUpperCase() === 'GRAMS') {
-    // For KG, find the appropriate unit price based on quantityUnits
-    console.log("Inventory")
-    console.log(inventoryItem.unitPrices)
-    if (!inventoryItem.unitPrices) {
-      throw new Error("Invalid product unitPrices for KG");
-    }
-
-    var unitPrice = null;
-    for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
-      if (quantityUnits === inventoryItem.unitPrices[i].qty) {
-        console.log(inventoryItem.unitPrices[i])
-        unitPrice = inventoryItem.unitPrices[i];
-        break;
-      }
-    }
-    console.log(unitPrice)
-
-    if (!unitPrice) {
-      throw new Error("Invalid quantity units for KG");
-      console.log("error")
-    }
-
-    price = parseFloat(unitPrice.price);
-    mrp = parseFloat(unitPrice.mrp);
-    savings = parseFloat((unitPrice.savings * quantity).toFixed(2));
-    subtotal = parseFloat((price * quantity).toFixed(2));
-
-  } else {
-    throw new Error("Invalid product unit");
-  }
 
   return {
     product,
@@ -361,12 +288,14 @@ module.exports.handler = async (event) => {
 
       // Add delivery charges to subtotal if applicable
       var finalTotal = totalPrice + deliveryCharges;
+      console.log("PRODUCTSSSSSSs")
+      console.log(product)
 
       orderItems.push({
         productId: item.productId,
         productName: product.name,
         productImage: product.image,
-        unit: product.unit,
+        unit: product.units,
         quantity: item.quantity,
         quantityUnits: item.quantityUnits,
         price: price,
@@ -438,7 +367,7 @@ module.exports.handler = async (event) => {
         shift: deliverySlotDetails.shift,
         endAmPm: deliverySlotDetails.slot.endAmPm,
         startAmPm: deliverySlotDetails.slot.startAmPm,
-        date : deliverySlotDetails.date
+        date: deliverySlotDetails.date
       },
       // status: "Order placed",
       updatedAt: getCurrentISTTime(),

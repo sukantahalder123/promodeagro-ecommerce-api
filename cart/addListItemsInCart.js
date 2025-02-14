@@ -78,8 +78,9 @@ async function emptyUserCart(userId) {
 
 // Function to update the cart with multiple items
 exports.handler = async (event) => {
-    const { userId, cartItems } = JSON.parse(event.body);
+    const { userId, cartItems    } = JSON.parse(event.body);
 
+    console.log(cartItems)
     if (!userId) {
         return {
             statusCode: 400,
@@ -130,60 +131,12 @@ exports.handler = async (event) => {
                 };
             }
 
-            let unitPrice;
-            let price, mrp, savings, subtotal;
-            const InventoryParams = {
-                TableName: process.env.INVENTORY_TABLE,
-                IndexName: "productIdIndex", // Replace with your actual GSI name
-                KeyConditionExpression: "productId = :productId",
-                ExpressionAttributeValues: {
-                    ":productId": { S: productId },
-                },
-            };
-
-            const inventoryData = await dynamoDB.send(new QueryCommand(InventoryParams));
-            const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
-
-            if (product.unit.toUpperCase() === 'GRAMS') {
-                for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
-                    if (quantityUnits === inventoryItem.unitPrices[i].qty) {
-                        unitPrice = inventoryItem.unitPrices[i];
-                        break;
-                    }
-                }
-
-                if (!unitPrice) {
-                    return {
-                        statusCode: 400,
-                        body: JSON.stringify({ message: "Invalid quantity units for KG" }),
-                    };
-                }
-
-                price = parseFloat(unitPrice.price);
-                mrp = parseFloat(unitPrice.mrp);
-                savings = parseFloat((unitPrice.savings * quantity).toFixed(2));
-                subtotal = parseFloat((price * quantity).toFixed(2));
-
-            } else if (['PIECES', 'KGS', 'LITRES'].includes(product.unit.toUpperCase())) {
-                if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-                    return {
-                        statusCode: 400,
-                        body: JSON.stringify({ message: "Invalid product pricing" }),
-                    };
-                }
-
-                price = parseFloat(inventoryItem.onlineStorePrice);
-                mrp = parseFloat(inventoryItem.compareAt);
-                savings = parseFloat(((mrp - price) * quantity).toFixed(2));
-                subtotal = parseFloat((price * quantity).toFixed(2));
-            } else {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid product unit" }),
-                };
-            }
-
+            const subtotal = product.sellingPrice * quantity;
+            const mrps = product.comparePrice * quantity;
+            const savings = mrps - subtotal; // Assuming `mrp` is the original price
             // Prepare the item to be stored in the CartItems table
+
+            console.log(product)
             const params = {
                 TableName: process.env.CART_TABLE,
                 Item: {
@@ -194,11 +147,11 @@ exports.handler = async (event) => {
                     Quantity: quantity,
                     QuantityUnits: quantityUnits,
                     Savings: savings,
-                    Price: price,
+                    Price: product.sellingPrice,
                     category: product.category,
                     // subcategory: product.subcategory,
                     Subtotal: subtotal,
-                    Mrp: mrp
+                    Mrp: product.comparePrice,
                 },
             };
             console.log(params)

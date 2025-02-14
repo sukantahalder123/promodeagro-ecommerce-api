@@ -56,94 +56,14 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
             };
         }
 
-        let price, mrp, savings, subtotal;
+        let price, mrp;
 
-        const InventoryParams = {
-            TableName: process.env.INVENTORY_TABLE,
-            IndexName: "productIdIndex", // Replace with your actual GSI name
-            KeyConditionExpression: "productId = :productId",
-            ExpressionAttributeValues: {
-                ":productId": { S: productId },
-            },
-        };
+        const subtotal = product.sellingPrice * quantity;
+        const mrps = product.comparePrice * quantity;
+        const savings = mrps - subtotal; // Assuming `mrp` is the original price
+        // Prepare the item to be stored in the CartItems table
 
-
-        const inventoryData = await dynamoDB.send(new QueryCommand(InventoryParams));
-        const inventoryItem = (inventoryData.Items && inventoryData.Items.length > 0) ? unmarshall(inventoryData.Items[0]) : {};
-
-
-        if (product.unit.toUpperCase() === 'GRAMS') {
-            // Find the appropriate unit price based on quantityUnits for KG
-            let unitPrice = null;
-            for (let i = inventoryItem.unitPrices.length - 1; i >= 0; i--) {
-                if (quantityUnits === inventoryItem.unitPrices[i].qty) {
-                    unitPrice = inventoryItem.unitPrices[i];
-                    break;
-                }
-            }
-
-            if (!unitPrice) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid quantity units for GRAMS" }),
-                };
-            }
-
-            price = unitPrice.price;
-            mrp = unitPrice.mrp;
-            savings = (unitPrice.savings * quantity).toFixed(2);
-            subtotal = (price * quantity).toFixed(2);
-
-        } else if (product.unit.toUpperCase() === 'PIECES') {
-            // For PCS, we assume there's a single price for each piece
-            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
-                };
-            }
-
-            price = inventoryItem.onlineStorePrice;
-            mrp = inventoryItem.compareAt;
-            savings = ((mrp - price) * quantity).toFixed(2);
-            subtotal = (price * quantity).toFixed(2);
-
-        } else if (product.unit.toUpperCase() === 'KGS') {
-            // For PCS, we assume there's a single price for each piece
-            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
-                };
-            }
-
-            price = inventoryItem.onlineStorePrice;
-            mrp = inventoryItem.compareAt;
-            savings = ((mrp - price) * quantity).toFixed(2);
-            subtotal = (price * quantity).toFixed(2);
-
-        }  else if (product.unit.toUpperCase() === 'LITRES') {
-            // For PCS, we assume there's a single price for each piece
-            if (!inventoryItem.onlineStorePrice || !inventoryItem.compareAt) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ message: "Invalid product pricing for PCS" }),
-                };
-            }
-
-            price = inventoryItem.onlineStorePrice;
-            mrp = inventoryItem.compareAt;
-            savings = ((mrp - price) * quantity).toFixed(2);
-            subtotal = (price * quantity).toFixed(2);
-
-        }  else {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ message: "Invalid product unit" }),
-            };
-        }
-
-        // Prepare the item update parameters for DynamoDB
+        
         const params = {
             TableName: process.env.CART_TABLE,
             Key: {
@@ -155,8 +75,8 @@ async function updateCartItem(userId, productId, quantity, quantityUnits) {
                 ':quantity': quantity,
                 ':quantityUnits': quantityUnits,
                 ':subtotal': parseFloat(subtotal),
-                ':price': parseFloat(price),
-                ':mrp': parseFloat(mrp),
+                ':price': parseFloat(product.sellingPrice),
+                ':mrp': parseFloat(product.comparePrice),
                 ':savings': parseFloat(savings)
             },
             ReturnValues: 'UPDATED_NEW'

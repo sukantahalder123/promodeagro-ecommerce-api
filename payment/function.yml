@@ -22,3 +22,10 @@ cashFreeWebhook:
      - httpApi:
          path: /cashFreeWebhook
          method: POST
+
+phopnePayWebhook:
+   handler:  payment/phonepayWebhook.handler
+   events:
+     - httpApi:
+         path: /phonepayWebhook
+         method: POST

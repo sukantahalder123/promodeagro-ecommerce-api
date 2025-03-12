@@ -1,6 +1,14 @@
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand, ScanCommand } = require('@aws-sdk/client-dynamodb');
+
 require('dotenv').config();
+const addressTableName = process.env.ADDRESS_TABLE; // Add the address table name
+const { unmarshall, marshall } = require("@aws-sdk/util-dynamodb");
+
+const dynamoDB = new DynamoDBClient({
+    // Add any specific configurations here
+});
 
 // Function to check if the user exists in the Users table
 async function getUserDetails(userId) {
@@ -20,8 +28,29 @@ async function getUserDetails(userId) {
     }
 }
 
+// Function to get address details
+async function getAddressDetails(userId, addressId) {
+    if (!addressId) return null; // If addressId is not provided, return null
+
+    const getAddressParams = {
+        TableName: addressTableName,
+        Key: marshall({
+            userId: userId,
+            addressId: addressId
+        }) // Ensure this matches your table's key schema
+    };
+
+    try {
+        const { Item: addressItem } = await dynamoDB.send(new GetItemCommand(getAddressParams));
+        return addressItem ? unmarshall(addressItem) : null;
+    } catch (error) {
+        console.error('Error fetching address:', error);
+        return null; // Return null in case of error
+    }
+}
+
 exports.handler = async (event) => {
-    const userId = event.pathParameters.userId;
+    const { addressId, userId } = event.queryStringParameters;
 
     if (!userId) {
         return {
@@ -60,13 +89,28 @@ exports.handler = async (event) => {
             totalSavings += item.Savings || 0;
         });
 
-        // Calculate delivery charges
-        let deliveryCharges = subTotal > 300 ? 0 : 50;
+        const addressDetails = await getAddressDetails(userId, addressId);
+        console.log(addressDetails);
 
-        // Add delivery charges to subtotal if applicable
+        let deliveryCharges = subTotal > 300 ? 0 : 50; // Default delivery charge
+
+        if (addressDetails && addressDetails.zipCode) {
+            const freeDeliveryZipCodes = ['500086', '500091', '500030'];
+
+            if (freeDeliveryZipCodes.includes(addressDetails.zipCode)) {
+                console.log("true");
+                console.log(subTotal);
+                deliveryCharges = subTotal > 100 ? 0 : 20;
+            } else {
+                console.log(subTotal);
+                deliveryCharges = subTotal > 300 ? 0 : 50;
+            }
+        }
+
+        // Calculate final total
         const finalTotal = subTotal + deliveryCharges;
 
-        const response = {
+        return {
             statusCode: 200,
             body: JSON.stringify({
                 items: data.Items,
@@ -76,8 +120,6 @@ exports.handler = async (event) => {
                 finalTotal: finalTotal.toFixed(2)
             }),
         };
-
-        return response;
     } catch (error) {
         console.error('Error fetching cart details:', error);
         return {

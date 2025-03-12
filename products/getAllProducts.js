@@ -13,13 +13,13 @@ module.exports.handler = async (event) => {
     // Fetch all products with a filter for availability
     const scanParams = {
       TableName: process.env.PRODUCTS_TABLE,
-      FilterExpression: "#availability = :trueValue",
-      ExpressionAttributeNames: {
-        "#availability": "availability",
-      },
-      ExpressionAttributeValues: {
-        ":trueValue": { BOOL: true },
-      },
+      // FilterExpression: "#availability = :trueValue",
+      // ExpressionAttributeNames: {
+      //   "#availability": "availability",
+      // },
+      // ExpressionAttributeValues: {
+      //   ":trueValue": { BOOL: true },
+      // },
     };
 
     const productsData = await dynamoDB.send(new ScanCommand(scanParams));
@@ -110,6 +110,7 @@ async function fetchCartAndWishlistInfo(products, userId) {
         Price: product.price || 0,
         Mrp: product.mrp || 0,
         Quantity: 0,
+        // status:product.availability,
         productImage: product.image || "",
         productName: product.name || "",
       };

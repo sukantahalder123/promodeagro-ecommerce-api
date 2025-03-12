@@ -75,6 +75,14 @@ getBySubCategory:
         path: /getProductBySubCategory
         method: get
 
+demoCategory:
+  handler: products/demoProducts.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /getProduct
+        method: get
+
 
 homePageProducts:
   handler: products/homePageProducts.handler
@@ -84,6 +92,15 @@ homePageProducts:
         path: /homePageProducts
         method: get
 
+homePageProductsdemo:
+  handler: products/demoHomeProducts.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /homePageProductsDemo
+        method: get
+
+
 
 demoPrducts:
   handler: products/demo.handler
@@ -91,4 +108,13 @@ demoPrducts:
   events:
     - httpApi:
         path: /demo
+        method: get
+
+
+getSecrets:
+  handler: products/getSecrets.handler
+  timeout: 300
+  events:
+    - httpApi:
+        path: /getSecrets
         method: get

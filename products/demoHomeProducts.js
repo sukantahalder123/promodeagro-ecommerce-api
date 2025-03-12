@@ -16,13 +16,12 @@ exports.handler = async (event) => {
 
         for (const { category, subcategory } of categories) {
             const params = {
-                TableName: process.env.PRODUCTS_TABLE,
+                TableName: 'dev-promodeagro-admin-productsTable',
                 IndexName: 'subCategoryIndex',
                 KeyConditionExpression: 'subCategory = :subcategory',
                 ExpressionAttributeValues: {
                     ':subcategory': subcategory,
                 },
-               
             };
 
             const data = await docClient.query(params).promise();
@@ -30,20 +29,23 @@ exports.handler = async (event) => {
 
             const productMap = {};
             products.forEach(product => {
-                if (product.isVariant && product.parentProductId) {
-                    if (!productMap[product.parentProductId]) {
-                        productMap[product.parentProductId] = [];
+                if (product.groupId) {
+                    if (!productMap[product.groupId]) {
+                        productMap[product.groupId] = [];
                     }
-                    productMap[product.parentProductId].push(product);
+                    productMap[product.groupId].push(product);
                 } else {
-                    productMap[product.id] = [];
+                    productMap[product.id] = [product];
                 }
             });
 
-            const groupedProducts = products
-                .filter(product => !product.isVariant)
-                .map(product => {
-                    const variations = (productMap[product.id] || []).map(variant => ({
+            const groupedProducts = Object.keys(productMap).map(groupId => {
+                const groupProducts = productMap[groupId];
+                const mainProduct = groupProducts.find(p => !p.isVariant) || groupProducts[0];
+                
+                const variations = groupProducts
+                    .filter(p => p.isVariant)
+                    .map(variant => ({
                         id: variant.id,
                         name: variant.name || '',
                         category: variant.category || '',
@@ -55,7 +57,8 @@ exports.handler = async (event) => {
                         tags: variant.tags || [],
                         price: variant.sellingPrice || 0,
                         mrp: variant.comparePrice || 0,
-                        unit: variant.units || '',
+                        unit: variant.totalquantityB2cUnit || '',
+                        quantity: variant.totalQuantityInB2c || '',
                         inCart: false,
                         inWishlist: false,
                         cartItem: {
@@ -71,37 +74,20 @@ exports.handler = async (event) => {
                             productName: variant.name || '',
                         }
                     }));
-
-                    return {
-                        id: product.id,
-                        name: product.name || '',
-                        category: product.category || '',
-                        subCategory: product.subCategory || '',
-                        image: product.image || '',
-                        images: product.images || [],
-                        description: product.description || '',
-                        availability: product.availability || false,
-                        tags: product.tags || [],
-                        price: product.sellingPrice || 0,
-                        mrp: product.comparePrice || 0,
-                        unit: product.units || '',
-                        inCart: false,
-                        inWishlist: false,
-                        variations,
-                        cartItem: {
-                            ProductId: product.id,
-                            UserId: userId || 'defaultUserId',
-                            Savings: 0,
-                            QuantityUnits: 0,
-                            Subtotal: 0,
-                            Price: product.sellingPrice || 0,
-                            Mrp: product.comparePrice || 0,
-                            Quantity: 0,
-                            productImage: product.image || '',
-                            productName: product.name || '',
-                        }
-                    };
-                });
+                
+                return {
+                    groupId: groupId,
+                    name: mainProduct.name || '',
+                    category: mainProduct.category || '',
+                    subCategory: mainProduct.subCategory || '',
+                    image: mainProduct.image || '',
+                    images: mainProduct.images || [],
+                    description: mainProduct.description || '',
+                    tags: mainProduct.tags || [],
+                    variations,
+                  
+                };
+            });
 
             if (userId) {
                 const cartParams = {
@@ -127,16 +113,8 @@ exports.handler = async (event) => {
                     product.inWishlist = wishlistItemsSet.has(product.id);
                     if (cartItem) {
                         product.cartItem = {
-                            ProductId: cartItem.ProductId,
-                            UserId: cartItem.UserId,
-                            Savings: cartItem.Savings || 0,
-                            QuantityUnits: cartItem.QuantityUnits || 0,
-                            Subtotal: cartItem.Subtotal || 0,
-                            Price: cartItem.Price || product.price,
-                            Mrp: cartItem.Mrp || product.mrp,
-                            Quantity: cartItem.Quantity || 0,
-                            productImage: product.image || '',
-                            productName: product.name || '',
+                            ...product.cartItem,
+                            ...cartItem
                         };
                     }
 
@@ -146,23 +124,14 @@ exports.handler = async (event) => {
                         variant.inWishlist = wishlistItemsSet.has(variant.id);
                         if (variantCartItem) {
                             variant.cartItem = {
-                                ProductId: variantCartItem.ProductId,
-                                UserId: variantCartItem.UserId,
-                                Savings: variantCartItem.Savings || 0,
-                                QuantityUnits: variantCartItem.QuantityUnits || 0,
-                                Subtotal: variantCartItem.Subtotal || 0,
-                                Price: variantCartItem.Price || variant.price,
-                                Mrp: variantCartItem.Mrp || variant.mrp,
-                                Quantity: variantCartItem.Quantity || 0,
-                                productImage: variant.image || '',
-                                productName: variant.name || '',
+                                ...variant.cartItem,
+                                ...variantCartItem
                             };
                         }
                     });
                 });
             }
-            
-            groupedProducts.sort((a, b) => b.availability - a.availability);
+
             result.push({
                 category,
                 subcategory,

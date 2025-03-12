@@ -15,13 +15,17 @@ exports.handler = async (event) => {
     try {
         // Fetch all products related to the subcategory
         const params = {
-            TableName: process.env.PRODUCTS_TABLE,
+            TableName: 'dev-promodeagro-admin-productsTable',
             IndexName: 'subCategoryIndex',
             KeyConditionExpression: 'subCategory = :subcategory',
             ExpressionAttributeValues: {
                 ':subcategory': subcategory,
+                ':trueValue': true,
             },
-          
+            FilterExpression: '#availability = :trueValue',
+            ExpressionAttributeNames: {
+                '#availability': 'availability',
+            },
         };
 
         const data = await docClient.query(params).promise();
@@ -65,7 +69,6 @@ exports.handler = async (event) => {
             const wishlistData = await docClient.query(wishlistParams).promise();
             const wishlistItemsSet = new Set(wishlistData.Items.map(item => item.ProductId));
 
-
             products = products.map(product => {
                 const cartItem = cartItems.find(item => item.ProductId === product.id) || null;
                 const inWishlist = wishlistItemsSet.has(product.id);
@@ -93,9 +96,6 @@ exports.handler = async (event) => {
                 };
             });
         }
-
-        products.sort((a, b) => b.availability - a.availability);
-
 
         return {
             statusCode: 200,

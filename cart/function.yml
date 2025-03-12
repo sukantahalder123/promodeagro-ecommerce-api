@@ -16,7 +16,7 @@ getItemsInCart:
     handler: cart/getItemsInCart.handler
     events:
       - httpApi:
-          path: /cart/getItems/{userId}
+          path: /cart/getItems
           method: get
 
 

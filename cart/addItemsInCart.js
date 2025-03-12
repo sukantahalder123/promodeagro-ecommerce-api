@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient();
 const { DynamoDBClient, ScanCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const dynamoDB = new DynamoDBClient();
-const { unmarshall } = require("@aws-sdk/util-dynamodb");
+const { unmarshall , marshall } = require("@aws-sdk/util-dynamodb");
 
 require('dotenv').config();
 

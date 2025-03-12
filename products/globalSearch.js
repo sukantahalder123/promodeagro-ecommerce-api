@@ -217,53 +217,67 @@ exports.handler = async (event) => {
 
   try {
     const data = await docClient.send(new ScanCommand(params));
-    const products = data.Items;
+    var products = data.Items;
+    products = products.map(product => ({
+      id: product.id,
+      name: product.name || '',
+      category: product.category || '',
+      subCategory: product.subCategory || '',
+      image: product.image || '',
+      images: product.images || [],
+      description: product.description || '',
+      availability: product.availability || false,
+      tags: product.tags || [],
+      price: product.sellingPrice || 0,
+      mrp: product.comparePrice,
+      unit: product.unit || '',
+  }));
 
     // For each product, fetch price, mrp, and unitPrices from the Inventory table
-    for (let product of products) {
-      const inventoryParams = {
-        TableName: process.env.INVENTORY_TABLE,
-        IndexName: "productIdIndex",  // Assuming GSI on Inventory table with productId
-        KeyConditionExpression: "productId = :productId",
-        ExpressionAttributeValues: {
-          ":productId": product.id,  // Using product id as key
-        },
-      };
+    // for (let product of products) {
+    //   const inventoryParams = {
+    //     TableName: process.env.INVENTORY_TABLE,
+    //     IndexName: "productIdIndex",  // Assuming GSI on Inventory table with productId
+    //     KeyConditionExpression: "productId = :productId",
+    //     ExpressionAttributeValues: {
+    //       ":productId": product.id,  // Using product id as key
+    //     },
+    //   };
 
-      const inventoryData = await docClient.send(new QueryCommand(inventoryParams));
-      const inventoryItem = inventoryData.Items && inventoryData.Items[0];  // Assuming single inventory item
+    //   const inventoryData = await docClient.send(new QueryCommand(inventoryParams));
+    //   const inventoryItem = inventoryData.Items && inventoryData.Items[0];  // Assuming single inventory item
 
-      if (inventoryItem) {
-        if (inventoryItem.unitPrices) {
-          product.price = inventoryItem.unitPrices[0].price || 0;
-          product.mrp = inventoryItem.unitPrices[0].mrp || 0;
-          product.unitPrices = inventoryItem.unitPrices || [];
-        } else {
-          product.price = inventoryItem.onlineStorePrice || 0;
-          product.mrp = inventoryItem.compareAt || 0;
-          product.unitPrices = inventoryItem.unitPrices || [];
-        }
-      } else {
-        product.price = 0;
-        product.mrp = 0;
-        product.unitPrices = [];
-      }
+    //   if (inventoryItem) {
+    //     if (inventoryItem.unitPrices) {
+    //       product.price = inventoryItem.unitPrices[0].price || 0;
+    //       product.mrp = inventoryItem.unitPrices[0].mrp || 0;
+    //       product.unitPrices = inventoryItem.unitPrices || [];
+    //     } else {
+    //       product.price = inventoryItem.onlineStorePrice || 0;
+    //       product.mrp = inventoryItem.compareAt || 0;
+    //       product.unitPrices = inventoryItem.unitPrices || [];
+    //     }
+    //   } else {
+    //     product.price = 0;
+    //     product.mrp = 0;
+    //     product.unitPrices = [];
+    //   }
 
-      // Convert qty to grams in unitPrices if required
-      if (product.unitPrices && product.unitPrices.length > 0) {
-        product.unitPrices = product.unitPrices.map(unitPrice => ({
-          ...unitPrice,
-          qty: unitPrice.qty,  // Adjust conversion logic here if needed
-        }));
+    //   // Convert qty to grams in unitPrices if required
+    //   if (product.unitPrices && product.unitPrices.length > 0) {
+    //     product.unitPrices = product.unitPrices.map(unitPrice => ({
+    //       ...unitPrice,
+    //       qty: unitPrice.qty,  // Adjust conversion logic here if needed
+    //     }));
 
-        // Set default selectedQuantityUnitPrice and mrp
-        product.selectedQuantityUnitPrice = product.unitPrices[0].price || 0;
-        product.mrp = product.unitPrices[0].mrp || 0;
-      } else {
-        product.selectedQuantityUnitPrice = 0;
-        product.mrp = 0;
-      }
-    }
+    //     // Set default selectedQuantityUnitPrice and mrp
+    //     product.selectedQuantityUnitPrice = product.unitPrices[0].price || 0;
+    //     product.mrp = product.unitPrices[0].mrp || 0;
+    //   } else {
+    //     product.selectedQuantityUnitPrice = 0;
+    //     product.mrp = 0;
+    //   }
+    // }
 
     if (userId) {
       // Fetch cart items for the user

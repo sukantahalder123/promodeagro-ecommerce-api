@@ -40,13 +40,8 @@ exports.handler = async (event) => {
       TableName: process.env.PRODUCTS_TABLE,
       IndexName: 'categoryIndex', // Ensure an index on the 'Category' attribute exists
       KeyConditionExpression: 'category = :category',
-      FilterExpression: '#availability = :trueValue',
-      ExpressionAttributeNames: {
-        '#availability': 'availability',
-      },
       ExpressionAttributeValues: {
         ':category': category,
-        ':trueValue': true, // Merged availability filter
       },
       Limit: parseInt(pageSize),
       ExclusiveStartKey: decodedExclusiveStartKey,

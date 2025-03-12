@@ -15,7 +15,7 @@ const orderProcessSFArn = 'arn:aws:states:ap-south-1:851725323791:stateMachine:O
 const { v4: uuidv4 } = require('uuid');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const lambda = new LambdaClient({});
-const { createPaymentLink } = require('../payment/CashFreeOrder');
+const { initiatePayment } = require('../payment/phonePayOrder');
 const { generateBillImage } = require('../whatsaapNotifications/generateBillImage');
 const { shareBillOnWhatsaap } = require('../whatsaapNotifications/shareBillOnWhatsaap');
 const { Console } = require('console');
@@ -42,8 +42,7 @@ function generateRandomOrderId() {
   const part1 = a();
   const part2 = a();
   const s1 = BigInt(`0x${part1}`).toString().slice(0, 7);
-  const s2 = BigInt(`0x${part2}`).toString().slice(0, 7);
-  return `401-${s1}-${s2}`;
+  return `401-${s1}`;
 }
 
 function a() {
@@ -279,10 +278,20 @@ module.exports.handler = async (event) => {
       totalPrice += subtotal;
       totalSavings += savings;
       // Accumulate savings for each item
+      var deliveryCharges = null;
 
-      console.log(subtotal)
-      console.log(totalPrice)
-      var deliveryCharges = totalPrice > 300 ? 0 : 50;
+      var deliveryCharges = null;
+      const freeDeliveryZipCodes = ['500086', '500091', '500030'];
+
+      if (freeDeliveryZipCodes.includes(addressDetails.zipCode)) {
+        console.log(subtotal)
+        console.log(totalPrice)
+        deliveryCharges = totalPrice > 100 ? 0 : 20;
+      } else {
+        console.log(subtotal)
+        console.log(totalPrice)
+        deliveryCharges = totalPrice > 300 ? 0 : 50;
+      }
 
       console.log(deliveryCharges)
 
@@ -319,16 +328,16 @@ module.exports.handler = async (event) => {
       paymentDetails.status = "PENDING"
       console.log("billllsss")
 
-      const bill = await generateBillImage(orderItems)
-      console.log(bill)
-      console.log("billllsss")
+      // const bill = await generateBillImage(orderItems)
+      // console.log(bill)
+      // console.log("billllsss")
 
-      const response = await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
+      // const response = await shareBillOnWhatsaap(bill, addressDetails.name, addressDetails.phoneNumber)
 
     } else {
       console.log("testing")
 
-      const payment = await createPaymentLink(orderId, addressDetails, userId, finalTotal);
+      const payment = await initiatePayment(orderId,finalTotal);
       paymentDetails.status = "PENDING"
       paymentDetails.method = "Prepaid"
       paymentDetails.paymentLink = payment;

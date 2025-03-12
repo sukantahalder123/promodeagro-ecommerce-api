@@ -5,19 +5,24 @@
 // const client = new AWS.DynamoDBClient();
 // const docClient = DynamoDBDocumentClient.from(client);
 
-// // Base URLs for categories and subcategories
 // const CATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/categories/';
 // const SUBCATEGORY_BASE_URL = 'https://promodeagro-images-prod-ui-root.s3.us-east-1.amazonaws.com/subCategories/';
 
-// // Function to generate category image URL
 // const getCategoryImageUrl = (category) => {
 //   return `${CATEGORY_BASE_URL}${encodeURIComponent(category.replace(/\s+/g, '_').toLowerCase())}.png`;
 // };
 
-// // Function to generate subcategory image URL
 // const getSubcategoryImageUrl = (subCategory) => {
 //   return `${SUBCATEGORY_BASE_URL}${encodeURIComponent(subCategory)}.png`;
 // };
+
+// const CATEGORY_ORDER = [
+//   'Bengali Special',
+//   'Fresh Vegetables',
+//   'Fresh Fruits',
+//   'Groceries',
+//   'Dairy',
+// ];
 
 // exports.handler = async (event) => {
 //   const params = {
@@ -30,46 +35,51 @@
 //   };
 
 //   try {
-//     // Scan the table to get all products
 //     const data = await docClient.send(new ScanCommand(params));
 //     const products = data.Items;
 
-//     // Object to hold the categories and subcategories
 //     const categoryMap = {};
 
-//     // Loop through all products and group subcategories under categories
 //     products.forEach(product => {
-//       const category = product.category;
-//       const subCategory = product.subCategory;
+//       if (!product.category || product.category.trim() === 'Eggs Meat & Fish') return;
 
-//       if (category) {
-//         // If the category does not exist in the map, create an entry for it
-//         if (!categoryMap[category]) {
-//           categoryMap[category] = new Set();  // Using Set to avoid duplicate subcategories
-//         }
+//       const normalizedCategory = product.category.trim().toLowerCase();
+//       const subCategory = product.subCategory ? product.subCategory.trim() : null;
 
-//         // Add subcategory to the category in the map
-//         if (subCategory) {
-//           categoryMap[category].add(subCategory);
-//         }
+//       if (!categoryMap[normalizedCategory]) {
+//         categoryMap[normalizedCategory] = {
+//           originalName: product.category,
+//           subCategories: new Set(),
+//         };
+//       }
+
+//       if (subCategory) {
+//         categoryMap[normalizedCategory].subCategories.add(subCategory);
 //       }
 //     });
 
-//     // Convert categoryMap to an array of objects with dynamic image URLs for categories and subcategories
-//     const categories = Object.keys(categoryMap).map(category => ({
-//       CategoryName: category,
-//       image_url: getCategoryImageUrl(category),
-//       Subcategories: Array.from(categoryMap[category]).map(subCategory => ({
-//         name: subCategory,
-//         image_url: getSubcategoryImageUrl(subCategory)
-//       }))
-//     }));
+//     const categories = Object.keys(categoryMap).map(normalizedCategory => {
+//       const { originalName, subCategories } = categoryMap[normalizedCategory];
 
-//     // Sort categories and subcategories alphabetically (optional)
+//       return {
+//         CategoryName: originalName,
+//         image_url: getCategoryImageUrl(originalName),
+//         Subcategories: Array.from(subCategories).map(subCategory => ({
+//           name: subCategory,
+//           image_url: getSubcategoryImageUrl(subCategory)
+//         }))
+//       };
+//     });
+
+//     categories.sort((a, b) => {
+//       const indexA = CATEGORY_ORDER.indexOf(a.CategoryName);
+//       const indexB = CATEGORY_ORDER.indexOf(b.CategoryName);
+//       return indexA - indexB;
+//     });
+
 //     categories.forEach(category => {
 //       category.Subcategories.sort((a, b) => a.name.localeCompare(b.name));
 //     });
-//     categories.sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
 
 //     return {
 //       statusCode: 200,
@@ -83,6 +93,7 @@
 //     };
 //   }
 // };
+
 
 
 const AWS = require('@aws-sdk/client-dynamodb');
@@ -136,31 +147,37 @@ exports.handler = async (event) => {
 
     // Loop through all products and group subcategories under categories
     products.forEach(product => {
-      const category = product.category;
-      const subCategory = product.subCategory;
+      if (!product.category) return; // Skip if category is missing
 
-      if (category) {
-        // If the category does not exist in the map, create an entry for it
-        if (!categoryMap[category]) {
-          categoryMap[category] = new Set();  // Using Set to avoid duplicate subcategories
-        }
+      const normalizedCategory = product.category.trim().toLowerCase(); // Normalize category
+      const subCategory = product.subCategory ? product.subCategory.trim() : null;
 
-        // Add subcategory to the category in the map
-        if (subCategory) {
-          categoryMap[category].add(subCategory);
-        }
+      if (!categoryMap[normalizedCategory]) {
+        categoryMap[normalizedCategory] = {
+          originalName: product.category, // Store original case-sensitive name
+          subCategories: new Set(),
+        };
+      }
+
+      // Add subcategory to the category
+      if (subCategory) {
+        categoryMap[normalizedCategory].subCategories.add(subCategory);
       }
     });
 
     // Convert categoryMap to an array of objects with dynamic image URLs for categories and subcategories
-    const categories = Object.keys(categoryMap).map(category => ({
-      CategoryName: category,
-      image_url: getCategoryImageUrl(category),
-      Subcategories: Array.from(categoryMap[category]).map(subCategory => ({
-        name: subCategory,
-        image_url: getSubcategoryImageUrl(subCategory)
-      }))
-    }));
+    const categories = Object.keys(categoryMap).map(normalizedCategory => {
+      const { originalName, subCategories } = categoryMap[normalizedCategory];
+
+      return {
+        CategoryName: originalName,
+        image_url: getCategoryImageUrl(originalName),
+        Subcategories: Array.from(subCategories).map(subCategory => ({
+          name: subCategory,
+          image_url: getSubcategoryImageUrl(subCategory)
+        }))
+      };
+    });
 
     // Sort categories according to predefined order
     categories.sort((a, b) => {
@@ -169,7 +186,7 @@ exports.handler = async (event) => {
       return indexA - indexB;
     });
 
-    // Sort subcategories alphabetically (optional)
+    // Sort subcategories alphabetically
     categories.forEach(category => {
       category.Subcategories.sort((a, b) => a.name.localeCompare(b.name));
     });
@@ -186,3 +203,4 @@ exports.handler = async (event) => {
     };
   }
 };
+

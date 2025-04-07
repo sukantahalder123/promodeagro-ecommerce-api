@@ -5,6 +5,7 @@
     "@aws-sdk/client-secrets-manager": "^3.750.0",
     "@aws-sdk/lib-dynamodb": "^3.621.0",
     "@aws-sdk/util-dynamodb": "^3.540.0",
+    "algoliasearch": "^5.21.0",
     "aws-sdk": "^2.1576.0",
     "axios": "^1.6.8",
     "body-parser": "^1.20.3",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "serverless-domain-manager": "^7.4.0",
-    "serverless-offline": "^14.4.0"
+    "serverless-offline": "^14.4.0",
+    "serverless-plugin-warmup": "^8.3.0"
   }
 }

@@ -30,20 +30,25 @@ getAllProduct:
         
 delete:
   handler: products/delete.deleteProduct
-  timeout: 300
   events:
     - httpApi:
         path: /product
         method: delete
 getById:
   handler: products/getById.getProductById
-  timeout: 300
   events:
     - httpApi:
         path: /product/{id}
         method: get
 
 
+getByGroupId:
+  handler: products/getProductByGroupId.handler
+  events:
+    - httpApi:
+        path: /productByGroupId
+        method: get
+        
 searchApi:
     handler: products/searchApi.handler
     events:
@@ -61,7 +66,6 @@ globalSearch:
 
 getByCategory:
   handler: products/getProductsByCategory.handler
-  timeout: 300
   events:
     - httpApi:
         path: /getProductByCategory
@@ -69,7 +73,6 @@ getByCategory:
 
 getBySubCategory:
   handler: products/getProductsBySubCategory.handler
-  timeout: 300
   events:
     - httpApi:
         path: /getProductBySubCategory
@@ -77,7 +80,6 @@ getBySubCategory:
 
 demoCategory:
   handler: products/demoProducts.handler
-  timeout: 300
   events:
     - httpApi:
         path: /getProduct
@@ -86,7 +88,6 @@ demoCategory:
 
 homePageProducts:
   handler: products/homePageProducts.handler
-  timeout: 300
   events:
     - httpApi:
         path: /homePageProducts
@@ -94,7 +95,6 @@ homePageProducts:
 
 homePageProductsdemo:
   handler: products/demoHomeProducts.handler
-  timeout: 300
   events:
     - httpApi:
         path: /homePageProductsDemo
@@ -104,7 +104,6 @@ homePageProductsdemo:
 
 demoPrducts:
   handler: products/demo.handler
-  timeout: 300
   events:
     - httpApi:
         path: /demo
@@ -113,8 +112,12 @@ demoPrducts:
 
 getSecrets:
   handler: products/getSecrets.handler
-  timeout: 300
   events:
     - httpApi:
         path: /getSecrets
         method: get
+
+
+
+algoliaUpdate:
+  handler: products/updateInAlgolia.handler

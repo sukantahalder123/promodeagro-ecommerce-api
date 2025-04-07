@@ -193,6 +193,11 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Allow all origins
+        "Access-Control-Allow-Headers": "*", // Allow all headers
+        "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE", // Allow listed methods
+      },
       body: JSON.stringify(categories),
     };
   } catch (error) {

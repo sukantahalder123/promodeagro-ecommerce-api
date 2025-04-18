@@ -1,111 +1,135 @@
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient();
-const { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand, DeleteItemCommand, ScanCommand } = require('@aws-sdk/client-dynamodb');
-
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 require('dotenv').config();
-const addressTableName = process.env.ADDRESS_TABLE; // Add the address table name
-const { unmarshall, marshall } = require("@aws-sdk/util-dynamodb");
 
-const dynamoDB = new DynamoDBClient({
-    // Add any specific configurations here
-});
+// Constants
+const FREE_DELIVERY_THRESHOLD = 300;
+const FREE_DELIVERY_THRESHOLD_HYDERABAD = 100;
+const FREE_DELIVERY_ZIP_CODES = ['500086', '500091', '500030','500093'];
+const DEFAULT_DELIVERY_CHARGE = 50;
+const HYDERABAD_DELIVERY_CHARGE = 20;
 
-// Function to check if the user exists in the Users table
-async function getUserDetails(userId) {
-    const params = {
-        TableName: process.env.USERS_TABLE,
-        Key: {
-            UserId: userId, // Assuming 'UserId' is the primary key for the Users table
-        },
-    };
+// DynamoDB client configuration
+const dynamoDBClient = new DynamoDBClient({ region: 'ap-south-1' });
+const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
 
-    try {
-        const data = await docClient.get(params).promise();
-        return data.Item;
-    } catch (error) {
-        console.error('Error fetching user details:', error);
-        throw error;
-    }
-}
-
-// Function to get address details
-async function getAddressDetails(userId, addressId) {
-    if (!addressId) return null; // If addressId is not provided, return null
-
-    const getAddressParams = {
-        TableName: addressTableName,
-        Key: marshall({
-            userId: userId,
-            addressId: addressId
-        }) // Ensure this matches your table's key schema
-    };
-
-    try {
-        const { Item: addressItem } = await dynamoDB.send(new GetItemCommand(getAddressParams));
-        return addressItem ? unmarshall(addressItem) : null;
-    } catch (error) {
-        console.error('Error fetching address:', error);
-        return null; // Return null in case of error
-    }
-}
-
-exports.handler = async (event) => {
-    const { addressId, userId } = event.queryStringParameters;
-
-    if (!userId) {
+// Helper functions
+const calculateDeliveryCharges = (subTotal, zipCode) => {
+    if (!zipCode) {
         return {
-            statusCode: 400,
-            body: JSON.stringify({ message: "Missing userId in path parameters" }),
+            charges: subTotal > FREE_DELIVERY_THRESHOLD ? 0 : DEFAULT_DELIVERY_CHARGE,
+            tag: `Unlock free shipping on purchases over ₹${FREE_DELIVERY_THRESHOLD}`
         };
     }
 
-    try {
-        // Check if the user exists
-        const user = await getUserDetails(userId);
+    if (FREE_DELIVERY_ZIP_CODES.includes(zipCode)) {
+        return {
+            charges: subTotal > FREE_DELIVERY_THRESHOLD_HYDERABAD ? 0 : HYDERABAD_DELIVERY_CHARGE,
+            tag: `Unlock free shipping on purchases over ₹${FREE_DELIVERY_THRESHOLD_HYDERABAD}`
+        };
+    }
 
-        if (!user) {
+    return {
+        charges: subTotal > FREE_DELIVERY_THRESHOLD ? 0 : DEFAULT_DELIVERY_CHARGE,
+        tag: `Unlock free shipping on purchases over ₹${FREE_DELIVERY_THRESHOLD}`
+    };
+};
+
+const calculateCartTotals = (items) => {
+    return items.reduce((acc, item) => ({
+        subTotal: acc.subTotal + (item.Subtotal || 0),
+        savings: acc.savings + (item.Savings || 0)
+    }), { subTotal: 0, savings: 0 });
+};
+
+// Database operations
+const getUserDetails = async (userId) => {
+    const params = {
+        TableName: process.env.USERS_TABLE,
+        Key: { UserId: userId }
+    };
+
+    try {
+        const command = new GetCommand(params);
+        const { Item } = await docClient.send(command);
+        return Item;
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        throw new Error('Failed to fetch user details');
+    }
+};
+
+const getAddressDetails = async (userId, addressId) => {
+    if (!addressId) return null;
+
+    const params = {
+        TableName: process.env.ADDRESS_TABLE,
+        Key: {
+            userId,
+            addressId
+        }
+    };
+
+    try {
+        const command = new GetCommand(params);
+        const { Item } = await docClient.send(command);
+        return Item;
+    } catch (error) {
+        console.error('Error fetching address:', error);
+        return null;
+    }
+};
+
+const getCartItems = async (userId) => {
+    const params = {
+        TableName: process.env.CART_TABLE,
+        KeyConditionExpression: 'UserId = :userId',
+        ExpressionAttributeValues: {
+            ':userId': userId
+        }
+    };
+
+    try {
+        const command = new QueryCommand(params);
+        const { Items } = await docClient.send(command);
+        return Items;
+    } catch (error) {
+        console.error('Error fetching cart items:', error);
+        throw new Error('Failed to fetch cart items');
+    }
+};
+
+// Main handler
+exports.handler = async (event) => {
+    try {
+        const { addressId, userId } = event.queryStringParameters;
+
+        if (!userId) {
             return {
-                statusCode: 404,
-                body: JSON.stringify({ message: "User not found" }),
+                statusCode: 400,
+                body: JSON.stringify({ message: "Missing userId in query parameters" })
             };
         }
 
-        const params = {
-            TableName: process.env.CART_TABLE,
-            KeyConditionExpression: 'UserId = :userId',
-            ExpressionAttributeValues: {
-                ':userId': userId
-            }
-        };
-
-        const data = await docClient.query(params).promise();
-
-        // Calculate subtotal and savings
-        let subTotal = 0;
-        let totalSavings = 0;
-
-        data.Items.forEach(item => {
-            subTotal += item.Subtotal || 0;
-            totalSavings += item.Savings || 0;
-        });
-
-        const addressDetails = await getAddressDetails(userId, addressId);
-        console.log(addressDetails);
-
-        let deliveryCharges = subTotal > 300 ? 0 : 50; // Default delivery charge
-
-        if (addressDetails && addressDetails.zipCode) {
-            const freeDeliveryZipCodes = ['500086', '500091', '500030'];
-
-            if (freeDeliveryZipCodes.includes(addressDetails.zipCode)) {
-                console.log("true");
-                console.log(subTotal);
-                deliveryCharges = subTotal > 100 ? 0 : 20;
-            } else {
-                console.log(subTotal);
-                deliveryCharges = subTotal > 300 ? 0 : 50;
-            }
+        // Validate user exists
+        const user = await getUserDetails(userId);
+        if (!user) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: "User not found" })
+            };
         }
+
+        // Get cart items and calculate totals
+        const cartItems = await getCartItems(userId);
+        const { subTotal, savings } = calculateCartTotals(cartItems);
+
+        // Get delivery charges
+        const addressDetails = await getAddressDetails(userId, addressId);
+        const { charges: deliveryCharges, tag: chargestag } = calculateDeliveryCharges(
+            subTotal,
+            addressDetails?.zipCode
+        );
 
         // Calculate final total
         const finalTotal = subTotal + deliveryCharges;
@@ -113,18 +137,22 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             body: JSON.stringify({
-                items: data.Items,
+                items: cartItems,
                 subTotal: subTotal.toFixed(2),
-                savings: totalSavings.toFixed(2),
+                savings: savings.toFixed(2),
                 deliveryCharges,
-                finalTotal: finalTotal.toFixed(2)
-            }),
+                finalTotal: finalTotal.toFixed(2),
+                chargestag
+            })
         };
     } catch (error) {
-        console.error('Error fetching cart details:', error);
+        console.error('Error processing request:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
+            body: JSON.stringify({
+                message: "Internal Server Error",
+                error: error.message
+            })
         };
     }
 };

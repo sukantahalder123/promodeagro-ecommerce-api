@@ -29,3 +29,10 @@ phopnePayWebhook:
      - httpApi:
          path: /phonepayWebhook
          method: POST
+
+createPaymentLink:
+  handler: payment/createPaymentLink.handler
+  events:
+    - httpApi:
+        path: /createPaymentLink
+        method: POST

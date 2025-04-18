@@ -9,6 +9,9 @@ provider:
   runtime: nodejs18.x
   role: arn:aws:iam::851725323791:role/ecommerce_Lambda_Role
   versionFunctions: false
+  timeout: 29
+  logs:
+      httpApi: true
   httpApi:
    
     authorizers:
@@ -28,6 +31,11 @@ provider:
         - DELETE
 
 custom:
+  warmup:
+    default:
+      enabled: true
+      events:
+        - schedule: rate(5 minutes)
   # customDomain:
   #   domainName: api.b2c.promodeagro.com
   #   basePath: project1
@@ -63,10 +71,10 @@ functions:
   - ${file(userSession/function.yml)}
 
   
-
-
   # - ${file(webhooks/function.yml)}
 plugins:
+  - serverless-plugin-warmup
+
   # - serverless-domain-manager
 
   - serverless-offline

@@ -13,6 +13,12 @@ getAllCategory:
         method: get
 
 
+# getCategory:
+#   handler: category/getCategories.handler
+#   events:
+#     - http:
+#         path: /getAllCategories
+#         method: get
 
 getCategory:
   handler: category/getCategories.handler
